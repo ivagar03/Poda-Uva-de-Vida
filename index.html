@@ -5,329 +5,111 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Gestión de Podas — Viña</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&display=swap');
   :root {
-    --verde: #2d6a4f;
-    --verde-claro: #52b788;
-    --rojo: #c1121f;
-    --rojo-claro: #e63946;
-    --naranja: #f4a261;
-    --fondo: #0d1b0f;
-    --panel: #111f14;
-    --borde: #2a3d2c;
-    --texto: #d8f3dc;
-    --texto-dim: #7aab85;
+    --verde: #2d6a4f; --verde-claro: #52b788;
+    --naranja: #f4a261; --rojo: #c1121f; --rojo-claro: #e63946;
+    --fondo: #0d1b0f; --panel: #111f14; --borde: #2a3d2c;
+    --texto: #d8f3dc; --texto-dim: #7aab85;
   }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { font-family:'DM Sans',sans-serif; background:var(--fondo); color:var(--texto); height:100%; overflow:hidden; touch-action:none; }
+  #app { display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* HEADER */
+  header { background:var(--panel); border-bottom:1px solid var(--borde); padding:8px 12px; display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  header h1 { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:2px; color:var(--verde-claro); white-space:nowrap; }
+  .header-right { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  select.podador-select { background:var(--fondo); border:1px solid var(--borde); color:var(--texto); padding:5px 8px; border-radius:6px; font-family:'DM Sans',sans-serif; font-size:0.82rem; max-width:130px; }
+  .btn { padding:5px 10px; border-radius:6px; border:none; font-family:'DM Sans',sans-serif; font-size:0.78rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .btn-reset  { background:#2a1a1a; color:var(--rojo-claro); border:1px solid var(--rojo); }
+  .btn-export { background:var(--verde); color:white; }
 
-  html, body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--fondo);
-    color: var(--texto);
-    height: 100%;
-    overflow: hidden;
-    touch-action: none;
-  }
+  /* PANEL TABS */
+  #panelToggleBar { background:var(--panel); border-bottom:1px solid var(--borde); display:flex; align-items:center; gap:4px; padding:0 10px; flex-shrink:0; }
+  .toggle-tab { padding:7px 11px; font-size:0.78rem; font-family:'DM Sans',sans-serif; font-weight:600; color:var(--texto-dim); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; transition:all 0.15s; white-space:nowrap; }
+  .toggle-tab.active { color:var(--verde-claro); border-bottom-color:var(--verde-claro); }
+  .mini-prog { margin-left:auto; display:flex; align-items:center; gap:7px; font-size:0.78rem; color:var(--texto-dim); white-space:nowrap; }
+  .mini-prog strong { color:var(--verde-claro); font-family:'Bebas Neue',sans-serif; font-size:1rem; }
+  .mini-prog-bar { width:55px; height:5px; background:#1a2e1c; border-radius:10px; overflow:hidden; }
+  .mini-prog-fill { height:100%; background:linear-gradient(90deg,var(--verde),var(--verde-claro)); border-radius:10px; transition:width 0.4s; }
 
-  /* ── LAYOUT PRINCIPAL ── */
-  #app {
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    overflow: hidden;
-  }
+  /* PANEL CONTENT */
+  #panelContent { background:var(--panel); border-bottom:1px solid var(--borde); overflow:hidden; max-height:0; transition:max-height 0.35s ease; flex-shrink:0; }
+  #panelContent.open { max-height:320px; overflow-y:auto; }
+  .panel-inner { padding:12px; display:none; gap:12px; flex-wrap:wrap; }
+  .panel-inner.active { display:flex; }
 
-  /* ── HEADER ── */
-  header {
-    background: var(--panel);
-    border-bottom: 1px solid var(--borde);
-    padding: 8px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    z-index: 10;
-  }
-  header h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.4rem;
-    letter-spacing: 2px;
-    color: var(--verde-claro);
-    white-space: nowrap;
-  }
-  .header-right {
-    margin-left: auto;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-  select.podador-select {
-    background: var(--fondo);
-    border: 1px solid var(--borde);
-    color: var(--texto);
-    padding: 5px 8px;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem;
-    max-width: 130px;
-  }
-  .btn {
-    padding: 5px 10px; border-radius: 6px; border: none;
-    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
-    font-weight: 600; cursor: pointer; white-space: nowrap;
-  }
-  .btn-reset  { background: #2a1a1a; color: var(--rojo-claro); border: 1px solid var(--rojo); }
-  .btn-export { background: var(--verde); color: white; }
+  .prog-box { flex:1; min-width:180px; background:var(--fondo); border:1px solid var(--borde); border-radius:8px; padding:12px; text-align:center; }
+  .prog-box .big-num { font-family:'Bebas Neue',sans-serif; font-size:2.8rem; line-height:1; color:var(--verde-claro); }
+  .prog-box .big-num span { font-size:1.1rem; color:var(--texto-dim); }
+  .prog-box .lbl { font-size:0.68rem; color:var(--texto-dim); text-transform:uppercase; letter-spacing:1px; margin:3px 0 8px; }
+  .prog-bar-wrap { background:#1a2e1c; border-radius:20px; height:8px; overflow:hidden; }
+  .prog-bar-fill { height:100%; background:linear-gradient(90deg,var(--verde),var(--verde-claro)); border-radius:20px; transition:width 0.5s; }
+  .prog-sub { font-size:0.68rem; color:var(--texto-dim); display:flex; justify-content:space-between; margin-top:5px; }
+  .inc-box { background:var(--fondo); border:1px solid var(--borde); border-radius:8px; padding:10px; text-align:center; min-width:80px; }
+  .inc-box .n { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--naranja); line-height:1; }
+  .inc-box .l { font-size:0.68rem; color:var(--texto-dim); text-transform:uppercase; letter-spacing:1px; }
 
-  /* ── PANEL DESPLEGABLE ── */
-  #panelToggleBar {
-    background: var(--panel);
-    border-bottom: 1px solid var(--borde);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 12px;
-    flex-shrink: 0;
-    z-index: 9;
-  }
+  .leyenda-panel { flex:1; min-width:160px; display:flex; flex-direction:column; gap:6px; }
+  .leyenda-panel h3 { font-family:'Bebas Neue',sans-serif; letter-spacing:1px; font-size:0.85rem; color:var(--texto-dim); padding-bottom:4px; border-bottom:1px solid var(--borde); }
+  .ley-item { display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--texto-dim); }
+  .ley-dot { width:20px; height:4px; border-radius:2px; flex-shrink:0; }
+  .ley-circ { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .ley-dot.gris { background:#555; }
+  .ley-dot.verde { background:#52b788; }
+  .ley-circ.rojo { background:#e63946; }
 
-  .toggle-tab {
-    padding: 7px 12px;
-    font-size: 0.78rem;
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 600;
-    color: var(--texto-dim);
-    cursor: pointer;
-    border: none;
-    background: none;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .toggle-tab.active {
-    color: var(--verde-claro);
-    border-bottom-color: var(--verde-claro);
-  }
+  .inc-lista-panel { flex:2; min-width:200px; display:flex; flex-direction:column; gap:6px; }
+  .inc-lista-panel h3 { font-family:'Bebas Neue',sans-serif; letter-spacing:1px; font-size:0.85rem; color:var(--texto-dim); padding-bottom:4px; border-bottom:1px solid var(--borde); }
+  .inc-scroll { max-height:160px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
+  .inc-item { background:#0d1b0f; border:1px solid var(--borde); border-radius:5px; padding:6px 8px; font-size:0.74rem; display:flex; flex-direction:column; gap:2px; }
+  .inc-top { display:flex; justify-content:space-between; align-items:center; }
+  .inc-num { font-weight:600; }
+  .inc-type { font-size:0.66rem; padding:2px 5px; border-radius:8px; font-weight:600; }
+  .inc-type.alambre { background:#4a3000; color:#f4a261; }
+  .inc-type.tensor  { background:#2d1a4a; color:#c77dff; }
+  .inc-type.otro    { background:#2a2a2a; color:#adb5bd; }
+  .inc-nota    { color:var(--texto-dim); font-style:italic; }
+  .inc-podador { color:var(--texto-dim); font-size:0.65rem; }
+  .inc-del-btn { background:none; border:none; cursor:pointer; color:#555; font-size:0.7rem; padding:2px 4px; }
 
-  /* Mini progreso siempre visible en la barra */
-  .mini-prog {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    color: var(--texto-dim);
-    white-space: nowrap;
-  }
-  .mini-prog strong { color: var(--verde-claro); font-family: 'Bebas Neue', sans-serif; font-size: 1rem; }
-  .mini-prog-bar {
-    width: 60px; height: 5px;
-    background: #1a2e1c; border-radius: 10px; overflow: hidden;
-  }
-  .mini-prog-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--verde), var(--verde-claro));
-    border-radius: 10px;
-    transition: width 0.4s;
-  }
+  /* TOOLBAR */
+  #toolbar { background:var(--panel); border-bottom:1px solid var(--borde); padding:6px 10px; display:flex; gap:6px; align-items:center; flex-shrink:0; }
+  .tool-btn { padding:8px 16px; border-radius:6px; border:1px solid var(--borde); background:var(--fondo); color:var(--texto-dim); cursor:pointer; font-size:0.84rem; font-family:'DM Sans',sans-serif; font-weight:600; transition:all 0.15s; white-space:nowrap; }
+  .tool-btn.active { background:var(--verde); color:white; border-color:var(--verde); }
+  .tool-btn.inc-tool.active { background:#c1121f; color:white; border-color:#c1121f; }
+  .zoom-btns { margin-left:auto; display:flex; gap:4px; }
+  .zoom-btn { width:36px; height:36px; border-radius:6px; border:1px solid var(--borde); background:var(--fondo); color:var(--texto); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .zoom-btn:active { background:var(--verde); }
 
-  /* Panel desplegable */
-  #panelContent {
-    background: var(--panel);
-    border-bottom: 1px solid var(--borde);
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.35s ease;
-    flex-shrink: 0;
-    z-index: 8;
-  }
-  #panelContent.open { max-height: 340px; overflow-y: auto; }
+  /* CANVAS */
+  #canvasWrap { flex:1; overflow:hidden; position:relative; background:#091409; touch-action:none; }
+  #vinaCanvas { position:absolute; top:0; left:0; cursor:grab; transform-origin:0 0; image-rendering:crisp-edges; }
+  #vinaCanvas:active { cursor:grabbing; }
 
-  .panel-inner {
-    padding: 12px;
-    display: none;
-    gap: 12px;
-  }
-  .panel-inner.active { display: flex; flex-wrap: wrap; }
+  /* TOAST */
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#1a3320; border:1px solid var(--borde); color:var(--texto); padding:8px 20px; border-radius:20px; font-size:0.84rem; pointer-events:none; opacity:0; transition:opacity 0.3s; z-index:300; white-space:nowrap; }
+  #toast.show { opacity:1; }
 
-  /* Progreso panel */
-  .prog-box {
-    flex: 1; min-width: 180px;
-    background: var(--fondo);
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-  }
-  .prog-box .big-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.8rem; line-height: 1;
-    color: var(--verde-claro);
-  }
-  .prog-box .big-num span { font-size: 1.1rem; color: var(--texto-dim); }
-  .prog-box .lbl { font-size: 0.68rem; color: var(--texto-dim); text-transform: uppercase; letter-spacing: 1px; margin: 3px 0 8px; }
-  .prog-bar-wrap { background: #1a2e1c; border-radius: 20px; height: 8px; overflow: hidden; }
-  .prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--verde), var(--verde-claro)); border-radius: 20px; transition: width 0.5s; }
-  .prog-sub { font-size: 0.68rem; color: var(--texto-dim); display: flex; justify-content: space-between; margin-top: 5px; }
-
-  .inc-box {
-    background: var(--fondo); border: 1px solid var(--borde);
-    border-radius: 8px; padding: 10px; text-align: center;
-    min-width: 80px;
-  }
-  .inc-box .n { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--naranja); line-height:1; }
-  .inc-box .l { font-size: 0.68rem; color: var(--texto-dim); text-transform: uppercase; letter-spacing: 1px; }
-
-  /* Leyenda panel */
-  .leyenda-panel {
-    flex: 1; min-width: 160px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .leyenda-panel h3 {
-    font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;
-    font-size: 0.85rem; color: var(--texto-dim);
-    padding-bottom: 4px; border-bottom: 1px solid var(--borde);
-  }
-  .ley-item { display: flex; align-items: center; gap: 7px; font-size: 0.8rem; color: var(--texto-dim); }
-  .ley-dot { width: 20px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-  .ley-dot.p  { background: #e63946; }
-  .ley-dot.h  { background: #52b788; }
-  .ley-dot.al { background: #f4a261; }
-  .ley-dot.te { background: #9b5de5; }
-  .ley-dot.ot { background: #adb5bd; }
-
-  /* Incidencias panel */
-  .inc-lista-panel {
-    flex: 2; min-width: 200px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .inc-lista-panel h3 {
-    font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px;
-    font-size: 0.85rem; color: var(--texto-dim);
-    padding-bottom: 4px; border-bottom: 1px solid var(--borde);
-  }
-  .inc-scroll { max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-  .inc-item {
-    background: #0d1b0f; border: 1px solid var(--borde);
-    border-radius: 5px; padding: 6px 8px;
-    font-size: 0.74rem; display: flex; flex-direction: column; gap: 2px;
-  }
-  .inc-top { display: flex; justify-content: space-between; align-items: center; }
-  .inc-num { font-weight: 600; }
-  .inc-type { font-size: 0.66rem; padding: 2px 5px; border-radius: 8px; font-weight: 600; }
-  .inc-type.alambre { background: #4a3000; color: #f4a261; }
-  .inc-type.tensor  { background: #2d1a4a; color: #c77dff; }
-  .inc-type.otro    { background: #2a2a2a; color: #adb5bd; }
-  .inc-nota    { color: var(--texto-dim); font-style: italic; }
-  .inc-podador { color: var(--texto-dim); font-size: 0.65rem; }
-  .inc-del-btn { background: none; border: none; cursor: pointer; color: #555; font-size: 0.7rem; padding: 2px 4px; }
-
-  /* ── TOOLBAR HERRAMIENTAS ── */
-  #toolbar {
-    background: var(--panel);
-    border-bottom: 1px solid var(--borde);
-    padding: 6px 10px;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-shrink: 0;
-  }
-  .tool-btn {
-    padding: 7px 14px; border-radius: 6px; border: 1px solid var(--borde);
-    background: var(--fondo); color: var(--texto-dim); cursor: pointer;
-    font-size: 0.82rem; font-family: 'DM Sans', sans-serif;
-    font-weight: 600; transition: all 0.15s; white-space: nowrap;
-  }
-  .tool-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
-  .tool-btn.inc-tool.active { background: var(--naranja); color: #1a0a00; border-color: var(--naranja); }
-
-  .zoom-btns {
-    margin-left: auto;
-    display: flex; gap: 4px;
-  }
-  .zoom-btn {
-    width: 34px; height: 34px;
-    border-radius: 6px; border: 1px solid var(--borde);
-    background: var(--fondo); color: var(--texto);
-    font-size: 1.1rem; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Sans', sans-serif;
-  }
-  .zoom-btn:active { background: var(--verde); }
-
-  /* ── CANVAS AREA ── */
-  #canvasWrap {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-    background: #091409;
-    touch-action: none;
-  }
-  #vinaCanvas {
-    position: absolute;
-    top: 0; left: 0;
-    cursor: grab;
-    border-radius: 0;
-    transform-origin: 0 0;
-  }
-  #vinaCanvas:active { cursor: grabbing; }
-
-  /* ── TOAST (feedback táctil) ── */
-  #toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: #1a3320; border: 1px solid var(--borde);
-    color: var(--texto); padding: 8px 18px; border-radius: 20px;
-    font-size: 0.82rem; pointer-events: none;
-    opacity: 0; transition: opacity 0.3s;
-    z-index: 300; white-space: nowrap;
-  }
-  #toast.show { opacity: 1; }
-
-  /* ── MODAL ── */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-    display: flex; align-items: flex-end; justify-content: center;
-    z-index: 200; backdrop-filter: blur(4px);
-  }
-  .modal-overlay.hidden { display: none; }
-  .modal {
-    background: var(--panel); border: 1px solid var(--borde);
-    border-radius: 16px 16px 0 0; padding: 20px;
-    width: 100%; max-width: 500px;
-    display: flex; flex-direction: column; gap: 12px;
-    padding-bottom: 30px;
-  }
-  .modal-handle {
-    width: 40px; height: 4px; background: var(--borde);
-    border-radius: 2px; margin: 0 auto 4px;
-  }
-  .modal h3 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.2rem; color: var(--naranja); }
-  .modal label { font-size: 0.8rem; color: var(--texto-dim); display: block; margin-bottom: 4px; }
-  .modal select, .modal textarea {
-    width: 100%; background: var(--fondo); border: 1px solid var(--borde);
-    color: var(--texto); border-radius: 8px; padding: 10px 12px;
-    font-family: 'DM Sans', sans-serif; font-size: 1rem;
-  }
-  .modal textarea { resize: none; height: 80px; }
-  .modal-btns { display: flex; gap: 8px; }
-  .btn-cancel  { flex: 1; background: var(--fondo); color: var(--texto-dim); border: 1px solid var(--borde); padding: 10px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-  .btn-confirm { flex: 2; background: var(--naranja); color: #1a0a00; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-
-  /* Desktop: sidebar clásico */
-  @media (min-width: 768px) {
-    #app { flex-direction: column; }
-    .modal-overlay { align-items: center; }
-    .modal { border-radius: 12px; max-width: 360px; padding-bottom: 20px; }
-    .modal-handle { display: none; }
-  }
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:flex-end; justify-content:center; z-index:200; backdrop-filter:blur(4px); }
+  .modal-overlay.hidden { display:none; }
+  .modal { background:var(--panel); border:1px solid var(--borde); border-radius:16px 16px 0 0; padding:20px; width:100%; max-width:500px; display:flex; flex-direction:column; gap:12px; padding-bottom:32px; }
+  .modal-handle { width:40px; height:4px; background:var(--borde); border-radius:2px; margin:0 auto 4px; }
+  .modal h3 { font-family:'Bebas Neue',sans-serif; letter-spacing:2px; font-size:1.2rem; color:#e63946; }
+  .modal label { font-size:0.8rem; color:var(--texto-dim); display:block; margin-bottom:4px; }
+  .modal select,.modal textarea { width:100%; background:var(--fondo); border:1px solid var(--borde); color:var(--texto); border-radius:8px; padding:10px 12px; font-family:'DM Sans',sans-serif; font-size:1rem; }
+  .modal textarea { resize:none; height:80px; }
+  .modal-btns { display:flex; gap:8px; }
+  .btn-cancel  { flex:1; background:var(--fondo); color:var(--texto-dim); border:1px solid var(--borde); padding:10px; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.9rem; }
+  .btn-confirm { flex:2; background:#c1121f; color:white; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.9rem; }
+  @media(min-width:768px){ .modal-overlay{align-items:center;} .modal{border-radius:12px;max-width:360px;padding-bottom:20px;} .modal-handle{display:none;} }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- HEADER -->
   <header>
     <h1>🍇 PODAS</h1>
     <select class="podador-select" id="podadorSelect">
@@ -338,16 +120,15 @@
       <option value="Podador 5">👤 Podador 5</option>
     </select>
     <div class="header-right">
-      <button class="btn btn-reset" onclick="resetAll()">↺</button>
-      <button class="btn btn-export" onclick="exportarResumen()">⬇</button>
+      <button class="btn btn-reset" onclick="resetAll()">↺ Reiniciar</button>
+      <button class="btn btn-export" onclick="exportarResumen()">⬇ Exportar</button>
     </div>
   </header>
 
-  <!-- BARRA DE TABS + MINI PROGRESO -->
   <div id="panelToggleBar">
-    <button class="toggle-tab" id="tabProgreso" onclick="togglePanel('progreso')">📊 Progreso</button>
-    <button class="toggle-tab" id="tabLeyenda"  onclick="togglePanel('leyenda')">🗺 Leyenda</button>
-    <button class="toggle-tab" id="tabInc"      onclick="togglePanel('incidencias')">⚠️ Incid.</button>
+    <button class="toggle-tab" id="tabProgreso"    onclick="togglePanel('progreso')">📊 Progreso</button>
+    <button class="toggle-tab" id="tabLeyenda"     onclick="togglePanel('leyenda')">🗺 Leyenda</button>
+    <button class="toggle-tab" id="tabIncidencias" onclick="togglePanel('incidencias')">⚠️ Incid.</button>
     <div class="mini-prog">
       <strong id="miniHechos">0</strong><span style="color:#3d5c3f">/301</span>
       <div class="mini-prog-bar"><div class="mini-prog-fill" id="miniBar" style="width:0%"></div></div>
@@ -355,38 +136,24 @@
     </div>
   </div>
 
-  <!-- PANEL DESPLEGABLE -->
   <div id="panelContent">
-    <!-- TAB PROGRESO -->
     <div class="panel-inner" id="paneProgreso">
       <div class="prog-box">
         <div class="big-num" id="numHechos">0<span>/301</span></div>
         <div class="lbl">líneos podados</div>
-        <div class="prog-bar-wrap">
-          <div class="prog-bar-fill" id="progBar" style="width:0%"></div>
-        </div>
-        <div class="prog-sub">
-          <span id="pendLabel">301 pendientes</span>
-          <span id="pctLabel">0%</span>
-        </div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progBar" style="width:0%"></div></div>
+        <div class="prog-sub"><span id="pendLabel">301 pendientes</span><span id="pctLabel">0%</span></div>
       </div>
-      <div class="inc-box">
-        <div class="n" id="numInc">0</div>
-        <div class="l">Incidencias</div>
-      </div>
+      <div class="inc-box"><div class="n" id="numInc">0</div><div class="l">Incidencias</div></div>
     </div>
-    <!-- TAB LEYENDA -->
     <div class="panel-inner" id="paneLeyenda">
       <div class="leyenda-panel">
         <h3>Leyenda</h3>
-        <div class="ley-item"><div class="ley-dot p"></div>Pendiente</div>
-        <div class="ley-item"><div class="ley-dot h"></div>Terminado</div>
-        <div class="ley-item"><div class="ley-dot al"></div>Alambre roto</div>
-        <div class="ley-item"><div class="ley-dot te"></div>Tensor a cambiar</div>
-        <div class="ley-item"><div class="ley-dot ot"></div>Otra incidencia</div>
+        <div class="ley-item"><div class="ley-dot gris"></div>Sin podar</div>
+        <div class="ley-item"><div class="ley-dot verde"></div>Podado</div>
+        <div class="ley-item"><div class="ley-circ rojo"></div>Incidencia</div>
       </div>
     </div>
-    <!-- TAB INCIDENCIAS -->
     <div class="panel-inner" id="paneIncidencias">
       <div class="inc-lista-panel">
         <h3>⚠️ Incidencias registradas</h3>
@@ -397,35 +164,31 @@
     </div>
   </div>
 
-  <!-- TOOLBAR HERRAMIENTAS -->
   <div id="toolbar">
-    <button class="tool-btn active" id="toolMarcar" onclick="setTool('marcar')">✅ Marcar</button>
-    <button class="tool-btn inc-tool" id="toolInc" onclick="setTool('incidencia')">⚠️ Incidencia</button>
+    <button class="tool-btn active" id="toolMarcar" onclick="setTool('marcar')">✅ Marcar podado</button>
+    <button class="tool-btn inc-tool" id="toolInc"  onclick="setTool('incidencia')">🔴 Incidencia</button>
     <div class="zoom-btns">
-      <button class="zoom-btn" onclick="zoomBy(0.3)">＋</button>
-      <button class="zoom-btn" onclick="zoomBy(-0.3)">－</button>
-      <button class="zoom-btn" onclick="resetZoom()" title="Centrar">⌖</button>
+      <button class="zoom-btn" onclick="zoomBy(0.35)">＋</button>
+      <button class="zoom-btn" onclick="zoomBy(-0.35)">－</button>
+      <button class="zoom-btn" onclick="resetZoom()">⌖</button>
     </div>
   </div>
 
-  <!-- CANVAS -->
   <div id="canvasWrap">
     <canvas id="vinaCanvas"></canvas>
   </div>
-
 </div>
 
-<!-- MODAL INCIDENCIA -->
 <div class="modal-overlay hidden" id="modalOverlay">
   <div class="modal">
     <div class="modal-handle"></div>
-    <h3>⚠️ Nueva Incidencia</h3>
+    <h3>🔴 Nueva Incidencia</h3>
     <div>
       <label>Tipo</label>
       <select id="incTipo">
-        <option value="alambre">🔴 Alambre roto</option>
-        <option value="tensor">🟣 Tensor a cambiar</option>
-        <option value="otro">⚪ Otra incidencia</option>
+        <option value="alambre">Alambre roto</option>
+        <option value="tensor">Tensor a cambiar</option>
+        <option value="otro">Otra incidencia</option>
       </select>
     </div>
     <div>
@@ -442,236 +205,197 @@
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════
-//  MAPA CON ZOOM/PAN TÁCTIL
-//  3 zonas sin solapamiento, líneos horizontales
-// ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════
+//  Canvas de alta resolución: 2760 x 2040 px internos
+//  Zonas sin solapamiento, líneos horizontales numerados de abajo a arriba
+//  Colores: gris = sin podar, verde = podado, punto rojo = incidencia
+// ══════════════════════════════════════════════════════════════════
 
-const W = 920, H = 680;
+const W = 2760, H = 2040;   // resolución interna alta
 const canvas = document.getElementById('vinaCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = W; canvas.height = H;
+const ctx    = canvas.getContext('2d');
+canvas.width  = W;
+canvas.height = H;
 
 const TOTAL = 301;
 
-// ── Zonas (coordenadas en px del canvas interno) ──────────────────────
+// ── Zonas (en píxeles del canvas interno) ───────────────────────
+// Layout: Roja arriba-izq | Verde abajo-izq | Azul columna derecha
+// Separación de 30px entre zonas
 const ZONAS = {
   R: { label:'Zona Roja',   total:33,  zoneColor:'#e63946',
-       bx:20,  by:20,  bw:370, bh:178,
-       lx1:30, lx2:382, ly1:34, ly2:192 },
+       bx:30,   by:30,   bw:1100, bh:520,
+       lx1:160, lx2:1110, ly1:80,  ly2:530 },
   G: { label:'Zona Verde',  total:118, zoneColor:'#52b788',
-       bx:20,  by:210, bw:370, bh:450,
-       lx1:30, lx2:382, ly1:226, ly2:652 },
+       bx:30,   by:580,  bw:1100, bh:1420,
+       lx1:160, lx2:1110, ly1:640, ly2:1960 },
   B: { label:'Zona Azul',   total:150, zoneColor:'#4895ef',
-       bx:405, by:20,  bw:495, bh:640,
-       lx1:418, lx2:892, ly1:36, ly2:652 }
+       bx:1160, by:30,   bw:1570, bh:1970,
+       lx1:1290, lx2:2700, ly1:80,  ly2:1960 }
 };
 
-// ── Estado ────────────────────────────────────────────────────────────
-let lineos = {};
+// ── Estado ───────────────────────────────────────────────────────
+let lineos      = {};
 let incidencias = [];
-let tool = 'marcar';
-let pendingKey = null;
-let hitRadius = {};
+let tool        = 'marcar';
+let pendingKey  = null;
+let hitRadius   = {};
 
-// ── Zoom / Pan ────────────────────────────────────────────────────────
-let scale = 1;
-let panX = 0, panY = 0;
-let isPanning = false;
-let lastPanX = 0, lastPanY = 0;
-
-// Pinch
-let lastPinchDist = null;
-let pinchMidX = 0, pinchMidY = 0;
+// ── Zoom / Pan ───────────────────────────────────────────────────
+let scale = 1, panX = 0, panY = 0;
 
 function applyTransform() {
-  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  canvas.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
 }
 
 function zoomBy(delta, cx, cy) {
   const wrap = document.getElementById('canvasWrap');
-  if (cx === undefined) { cx = wrap.clientWidth / 2; cy = wrap.clientHeight / 2; }
-  const newScale = Math.min(Math.max(scale + delta, 0.4), 5);
-  // Adjust pan so zoom centers on cx,cy
+  if (cx === undefined) { cx = wrap.clientWidth/2; cy = wrap.clientHeight/2; }
+  const newScale = Math.min(Math.max(scale + delta, 0.08), 8);
   const ratio = newScale / scale;
-  panX = cx - ratio * (cx - panX);
-  panY = cy - ratio * (cy - panY);
+  panX = cx - ratio*(cx - panX);
+  panY = cy - ratio*(cy - panY);
   scale = newScale;
   applyTransform();
 }
 
 function resetZoom() {
   const wrap = document.getElementById('canvasWrap');
-  const ww = wrap.clientWidth, wh = wrap.clientHeight;
-  // Fit canvas into wrap
-  const s = Math.min(ww / W, wh / H) * 0.96;
+  const s = Math.min(wrap.clientWidth/W, wrap.clientHeight/H) * 0.97;
   scale = s;
-  panX = (ww - W * s) / 2;
-  panY = (wh - H * s) / 2;
+  panX = (wrap.clientWidth  - W*s) / 2;
+  panY = (wrap.clientHeight - H*s) / 2;
   applyTransform();
 }
 
-// ── Touch events ──────────────────────────────────────────────────────
+// ── Touch / Mouse ────────────────────────────────────────────────
 const wrap = document.getElementById('canvasWrap');
-
-let touchStartTime = 0;
-let touchTapX = 0, touchTapY = 0;
-let touchMoved = false;
+let isPanning=false, touchMoved=false, lastPanX=0, lastPanY=0;
+let touchStartTime=0, touchTapX=0, touchTapY=0;
+let lastPinchDist=null;
 
 wrap.addEventListener('touchstart', e => {
   e.preventDefault();
   if (e.touches.length === 1) {
-    isPanning = true; touchMoved = false;
-    touchStartTime = Date.now();
-    lastPanX = e.touches[0].clientX;
-    lastPanY = e.touches[0].clientY;
-    touchTapX = e.touches[0].clientX;
-    touchTapY = e.touches[0].clientY;
-    lastPinchDist = null;
+    isPanning=true; touchMoved=false;
+    touchStartTime=Date.now();
+    lastPanX=e.touches[0].clientX; lastPanY=e.touches[0].clientY;
+    touchTapX=e.touches[0].clientX; touchTapY=e.touches[0].clientY;
+    lastPinchDist=null;
   } else if (e.touches.length === 2) {
-    isPanning = false;
-    lastPinchDist = getPinchDist(e);
-    pinchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-    pinchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    isPanning=false;
+    lastPinchDist=pinchDist(e);
   }
-}, { passive: false });
+},{ passive:false });
 
 wrap.addEventListener('touchmove', e => {
   e.preventDefault();
   if (e.touches.length === 2) {
-    // Pinch zoom
-    const dist = getPinchDist(e);
-    if (lastPinchDist !== null) {
-      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      const wrapRect = wrap.getBoundingClientRect();
-      zoomBy((dist - lastPinchDist) * 0.01, mx - wrapRect.left, my - wrapRect.top);
+    const d=pinchDist(e);
+    if (lastPinchDist!==null) {
+      const r=wrap.getBoundingClientRect();
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2 - r.left;
+      const my=(e.touches[0].clientY+e.touches[1].clientY)/2 - r.top;
+      zoomBy((d-lastPinchDist)*0.012, mx, my);
     }
-    lastPinchDist = dist;
-    return;
+    lastPinchDist=d; return;
   }
-  if (!isPanning || e.touches.length !== 1) return;
-  const dx = e.touches[0].clientX - lastPanX;
-  const dy = e.touches[0].clientY - lastPanY;
-  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) touchMoved = true;
-  panX += dx; panY += dy;
-  lastPanX = e.touches[0].clientX;
-  lastPanY = e.touches[0].clientY;
+  if (!isPanning || e.touches.length!==1) return;
+  const dx=e.touches[0].clientX-lastPanX, dy=e.touches[0].clientY-lastPanY;
+  if (Math.abs(dx)>3||Math.abs(dy)>3) touchMoved=true;
+  panX+=dx; panY+=dy;
+  lastPanX=e.touches[0].clientX; lastPanY=e.touches[0].clientY;
   applyTransform();
-}, { passive: false });
+},{ passive:false });
 
 wrap.addEventListener('touchend', e => {
   e.preventDefault();
-  lastPinchDist = null;
-  if (!touchMoved && e.changedTouches.length === 1 && (Date.now() - touchStartTime) < 350) {
-    // Tap — convert to canvas coords
-    const wrapRect = wrap.getBoundingClientRect();
-    const tx = touchTapX - wrapRect.left;
-    const ty = touchTapY - wrapRect.top;
-    const cx = (tx - panX) / scale;
-    const cy = (ty - panY) / scale;
-    handleCanvasClick(cx, cy);
+  lastPinchDist=null;
+  if (!touchMoved && e.changedTouches.length===1 && (Date.now()-touchStartTime)<400) {
+    const r=wrap.getBoundingClientRect();
+    const cx=(touchTapX-r.left-panX)/scale;
+    const cy=(touchTapY-r.top -panY)/scale;
+    handleClick(cx, cy, touchTapX-r.left, touchTapY-r.top);
   }
-  isPanning = false;
-}, { passive: false });
+  isPanning=false;
+},{ passive:false });
 
-function getPinchDist(e) {
-  const dx = e.touches[0].clientX - e.touches[1].clientX;
-  const dy = e.touches[0].clientY - e.touches[1].clientY;
-  return Math.sqrt(dx*dx + dy*dy);
+function pinchDist(e) {
+  const dx=e.touches[0].clientX-e.touches[1].clientX;
+  const dy=e.touches[0].clientY-e.touches[1].clientY;
+  return Math.sqrt(dx*dx+dy*dy);
 }
 
-// Mouse (desktop) ─────────────────────────────────────────────────────
-let mousePanning = false, lastMX = 0, lastMY = 0, mouseMoved = false;
-
-wrap.addEventListener('mousedown', e => {
-  mousePanning = true; mouseMoved = false;
-  lastMX = e.clientX; lastMY = e.clientY;
-});
-wrap.addEventListener('mousemove', e => {
+// Mouse
+let mousePanning=false, mouseMoved=false, lastMX=0, lastMY=0;
+wrap.addEventListener('mousedown', e=>{ mousePanning=true; mouseMoved=false; lastMX=e.clientX; lastMY=e.clientY; });
+wrap.addEventListener('mousemove', e=>{
   if (mousePanning) {
-    const dx = e.clientX - lastMX, dy = e.clientY - lastMY;
-    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) mouseMoved = true;
-    panX += dx; panY += dy;
-    lastMX = e.clientX; lastMY = e.clientY;
-    applyTransform();
-  }
-  // Tooltip
-  const wrapRect = wrap.getBoundingClientRect();
-  const cx = (e.clientX - wrapRect.left - panX) / scale;
-  const cy = (e.clientY - wrapRect.top  - panY) / scale;
-  const l = getLineoAt(cx, cy);
-  const tip = document.getElementById('toast');
-  // Use toast as tooltip on desktop
-  if (l && !mousePanning) {
-    const z = ZONAS[l.zona];
-    tip.textContent = `${z.label} · Líneo ${l.num} · ${l.estado === 'hecho' ? '✅ Hecho' : '🔴 Pendiente'}`;
-    tip.classList.add('show');
-  } else if (!l) {
-    tip.classList.remove('show');
+    const dx=e.clientX-lastMX, dy=e.clientY-lastMY;
+    if (Math.abs(dx)>2||Math.abs(dy)>2) mouseMoved=true;
+    panX+=dx; panY+=dy; lastMX=e.clientX; lastMY=e.clientY; applyTransform();
   }
 });
-wrap.addEventListener('mouseup', e => {
+wrap.addEventListener('mouseup', e=>{
   if (!mouseMoved) {
-    const wrapRect = wrap.getBoundingClientRect();
-    const cx = (e.clientX - wrapRect.left - panX) / scale;
-    const cy = (e.clientY - wrapRect.top  - panY) / scale;
-    handleCanvasClick(cx, cy);
+    const r=wrap.getBoundingClientRect();
+    const cx=(e.clientX-r.left-panX)/scale, cy=(e.clientY-r.top-panY)/scale;
+    handleClick(cx, cy, e.clientX-r.left, e.clientY-r.top);
   }
-  mousePanning = false;
+  mousePanning=false;
 });
-wrap.addEventListener('mouseleave', () => { mousePanning = false; });
-
-// Wheel zoom
-wrap.addEventListener('wheel', e => {
+wrap.addEventListener('mouseleave', ()=>mousePanning=false);
+wrap.addEventListener('wheel', e=>{
   e.preventDefault();
-  const wrapRect = wrap.getBoundingClientRect();
-  zoomBy(e.deltaY < 0 ? 0.15 : -0.15, e.clientX - wrapRect.left, e.clientY - wrapRect.top);
-}, { passive: false });
+  const r=wrap.getBoundingClientRect();
+  zoomBy(e.deltaY<0?0.2:-0.2, e.clientX-r.left, e.clientY-r.top);
+},{ passive:false });
 
-// ── Click handler ─────────────────────────────────────────────────────
-function handleCanvasClick(cx, cy) {
+// ── Click handler ────────────────────────────────────────────────
+// rawX/rawY = coordenadas en el wrap (para colocar incidencia en posición exacta)
+function handleClick(cx, cy, rawX, rawY) {
   const l = getLineoAt(cx, cy);
   if (!l) return;
 
   if (tool === 'marcar') {
-    l.estado = l.estado === 'hecho' ? 'pendiente' : 'hecho';
-    if (l.estado === 'hecho') {
+    l.estado = l.estado==='hecho' ? 'pendiente' : 'hecho';
+    if (l.estado==='hecho') {
       l.podador = document.getElementById('podadorSelect').value;
-      l.fecha = new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
-      showToast(`✅ ${ZONAS[l.zona].label} · Líneo ${l.num} — Hecho`);
+      l.fecha   = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+      showToast(`✅ ${ZONAS[l.zona].label} · Líneo ${l.num} — Podado`);
     } else {
-      l.podador = null; l.fecha = null;
-      showToast(`🔴 ${ZONAS[l.zona].label} · Líneo ${l.num} — Desmarcado`);
+      l.podador=null; l.fecha=null;
+      showToast(`⬜ ${ZONAS[l.zona].label} · Líneo ${l.num} — Desmarcado`);
     }
     saveState(); draw();
   } else {
-    pendingKey = l.key;
+    // Guardar posición exacta del click en coordenadas del canvas interno
+    pendingKey     = l.key;
+    pendingClickCX = cx;
+    pendingClickCY = cy;
     document.getElementById('modalOverlay').classList.remove('hidden');
   }
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────
-let toastTimer = null;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
-}
+let pendingClickCX=0, pendingClickCY=0;
 
-// ── Init líneos ───────────────────────────────────────────────────────
+// ── Init líneos ──────────────────────────────────────────────────
 function initLineos() {
   lineos = {};
   for (const [zid, z] of Object.entries(ZONAS)) {
-    const n = z.total;
-    const gap = n > 1 ? (z.ly2 - z.ly1) / (n - 1) : 0;
-    for (let i = 0; i < n; i++) {
+    const n   = z.total;
+    const gap = n>1 ? (z.ly2-z.ly1)/(n-1) : 0;
+    for (let i=0; i<n; i++) {
       const key = `${zid}_${i}`;
+      // Numeración de abajo a arriba: el líneo i=0 es el más arriba visualmente
+      // pero queremos que el nº 1 sea el más abajo → num = n - i
+      // Zona R continúa numeración desde 119 (después de la Verde que va 1-118)
+      const offset = zid === 'R' ? 118 : 0;
       lineos[key] = {
-        key, zona: zid, num: i + 1,
-        x1: z.lx1, y: z.ly1 + i * gap, x2: z.lx2,
-        estado: 'pendiente', incidencias: [],
+        key, zona:zid, num: offset + (n - i),   // R: 119-151 | G: 1-118 | B: 1-150
+        x1: z.lx1, y: z.ly1 + i*gap, x2: z.lx2,
+        estado: 'pendiente',
+        incidencias: [],
         podador: null, fecha: null
       };
     }
@@ -680,192 +404,152 @@ function initLineos() {
 
 function calcHitRadius() {
   for (const [zid, z] of Object.entries(ZONAS)) {
-    const gap = (z.ly2 - z.ly1) / (z.total - 1 || 1);
-    hitRadius[zid] = Math.min(gap / 2, 12);
+    const gap = (z.ly2-z.ly1) / (z.total-1||1);
+    hitRadius[zid] = Math.min(gap/2, 40); // máximo 40px en canvas interno
   }
 }
 
-// ── Color ─────────────────────────────────────────────────────────────
+// ── Hit test ─────────────────────────────────────────────────────
+function getLineoAt(cx, cy) {
+  let best=null, bestDist=Infinity;
+  for (const l of Object.values(lineos)) {
+    const z=ZONAS[l.zona];
+    if (cx < z.lx1-10 || cx > z.lx2+10 || cy < z.by || cy > z.by+z.bh) continue;
+    const d=Math.abs(cy-l.y);
+    const r=hitRadius[l.zona]||30;
+    if (d<=r && d<bestDist) { bestDist=d; best=l; }
+  }
+  return best;
+}
+
+// ── Colores ──────────────────────────────────────────────────────
+// Sin podar: gris | Podado: verde | Incidencia: punto rojo (se dibuja encima)
 function lineColor(l) {
-  if (l.incidencias.length > 0) {
-    const t = l.incidencias[0].tipo;
-    return t === 'alambre' ? '#f4a261' : t === 'tensor' ? '#9b5de5' : '#adb5bd';
-  }
-  return l.estado === 'hecho' ? '#52b788' : '#e63946';
+  return l.estado==='hecho' ? '#52b788' : '#666666';
 }
 
-// ── Dibujo ────────────────────────────────────────────────────────────
-function drawBg() {
-  ctx.fillStyle = '#0f2414';
-  ctx.fillRect(0, 0, W, H);
-  // olivar
-  ctx.fillStyle = '#0b1a0d';
-  for (let ox = 0; ox < W; ox += 30) {
-    for (let oy = 0; oy < H; oy += 30) {
-      const jx = Math.sin(ox * 7.3 + oy) * 8, jy = Math.cos(oy * 5.7 + ox) * 8;
-      const px2 = ox + jx, py2 = oy + jy;
-      let inZ = false;
+// ── Dibujo ───────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0,0,W,H);
+
+  // Fondo
+  ctx.fillStyle='#0f2414';
+  ctx.fillRect(0,0,W,H);
+
+  // Textura olivar (fuera de zonas)
+  ctx.fillStyle='#0b1a0d';
+  for (let ox=0; ox<W; ox+=90) {
+    for (let oy=0; oy<H; oy+=90) {
+      const jx=Math.sin(ox*7.3+oy)*22, jy=Math.cos(oy*5.7+ox)*22;
+      const px2=ox+jx, py2=oy+jy;
+      let inZ=false;
       for (const z of Object.values(ZONAS))
-        if (px2>z.bx && px2<z.bx+z.bw && py2>z.by && py2<z.by+z.bh) { inZ=true; break; }
-      if (!inZ) { ctx.beginPath(); ctx.arc(px2, py2, 9, 0, Math.PI*2); ctx.fill(); }
+        if (px2>z.bx && px2<z.bx+z.bw && py2>z.by && py2<z.by+z.bh){ inZ=true; break; }
+      if (!inZ){ ctx.beginPath(); ctx.arc(px2,py2,26,0,Math.PI*2); ctx.fill(); }
     }
   }
-}
 
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  drawBg();
-
-  for (const [zid, z] of Object.entries(ZONAS)) {
-    // Fondo zona
-    ctx.fillStyle = '#152e18';
-    ctx.beginPath(); ctx.roundRect(z.bx, z.by, z.bw, z.bh, 6); ctx.fill();
-    // Borde zona
-    ctx.strokeStyle = z.zoneColor + '77';
-    ctx.lineWidth = 2; ctx.setLineDash([8,5]);
-    ctx.beginPath(); ctx.roundRect(z.bx, z.by, z.bw, z.bh, 6); ctx.stroke();
+  // Zonas
+  for (const [zid,z] of Object.entries(ZONAS)) {
+    ctx.fillStyle='#152e18';
+    ctx.beginPath(); ctx.roundRect(z.bx,z.by,z.bw,z.bh,18); ctx.fill();
+    ctx.strokeStyle=z.zoneColor+'88'; ctx.lineWidth=5; ctx.setLineDash([24,14]);
+    ctx.beginPath(); ctx.roundRect(z.bx,z.by,z.bw,z.bh,18); ctx.stroke();
     ctx.setLineDash([]);
-    // Etiqueta
-    const hechos = Object.values(lineos).filter(l=>l.zona===zid && l.estado==='hecho').length;
-    const pct = Math.round(hechos/z.total*100);
-    ctx.fillStyle = z.zoneColor;
-    ctx.font = 'bold 11px DM Sans';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${z.label}  ·  ${hechos}/${z.total}  (${pct}%)`, z.bx+8, z.by+14);
+
+    // Etiqueta zona — incluye número de zona para evitar confusión entre numeraciones
+    const hechos=Object.values(lineos).filter(l=>l.zona===zid && l.estado==='hecho').length;
+    const pct=Math.round(hechos/z.total*100);
+    ctx.fillStyle=z.zoneColor;
+    ctx.font='bold 32px DM Sans';
+    ctx.textAlign='left';
+    ctx.fillText(`${z.label}  ·  ${hechos}/${z.total}  (${pct}%)`, z.bx+24, z.by+44);
+    // Indicador dirección numeración
+    const numMin = zid === 'R' ? 119 : 1;
+    const numMax = zid === 'R' ? 151 : z.total;
+    ctx.fillStyle=z.zoneColor+'66';
+    ctx.font='22px DM Sans';
+    ctx.fillText(`↑ ${numMax}   ↓ ${numMin}`, z.bx+24, z.by+z.bh-16);
   }
 
   // Líneos
   for (const l of Object.values(lineos)) {
-    const col = lineColor(l);
-    const { x1, y, x2 } = l;
-    if (l.estado === 'hecho') {
+    const col=lineColor(l);
+    const {x1, y, x2} = l;
+
+    if (l.estado==='hecho') {
       ctx.save();
-      ctx.shadowColor = '#52b788'; ctx.shadowBlur = 5;
-      ctx.strokeStyle = '#52b788'; ctx.lineWidth = 2.2;
+      ctx.shadowColor='#52b788'; ctx.shadowBlur=18;
+      ctx.strokeStyle='#52b788'; ctx.lineWidth=6;
       ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
       ctx.restore();
     } else {
-      ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.shadowBlur = 0;
+      ctx.strokeStyle='#555555'; ctx.lineWidth=4; ctx.shadowBlur=0;
       ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
     }
-    if (l.incidencias.length > 0) {
-      const mx = x1 + (x2-x1)*0.5;
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(mx, y, 5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#000'; ctx.font = 'bold 7px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('!', mx, y+2.5);
-    }
+
+    // Número de líneo — tamaño proporcional al hueco entre líneos
+    const zz = ZONAS[l.zona];
+    const gap = (zz.ly2-zz.ly1) / (zz.total-1||1);
+    const fontSize = Math.min(Math.max(gap * 0.55, 10), 16);
+    ctx.fillStyle = l.estado==='hecho' ? 'rgba(82,183,136,0.85)' : 'rgba(160,160,160,0.65)';
+    ctx.font = `bold ${fontSize}px DM Sans`;
+    ctx.textAlign = 'right';
+    ctx.fillText(l.num, x1-8, y + fontSize*0.35);
   }
 
-  // Numeración
+  // Puntos rojos de incidencias — radio 9 (mitad del anterior)
   for (const l of Object.values(lineos)) {
-    if (l.num%10!==0 && l.num!==1) continue;
-    ctx.fillStyle = 'rgba(180,230,190,0.5)';
-    ctx.font = '8px DM Sans'; ctx.textAlign = 'right';
-    ctx.fillText(l.num, l.x1-3, l.y+3);
+    for (const inc of l.incidencias) {
+      const ix = inc.cx !== undefined ? inc.cx : l.x1+(l.x2-l.x1)*0.5;
+      const iy = inc.cy !== undefined ? inc.cy : l.y;
+      ctx.save();
+      ctx.shadowColor='#e63946'; ctx.shadowBlur=12;
+      ctx.fillStyle='#e63946';
+      ctx.beginPath(); ctx.arc(ix, iy, 9, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle='white';
+      ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
+      ctx.fillText('!', ix, iy+4);
+    }
   }
 
   updateStats();
 }
 
-// ── Hit test ──────────────────────────────────────────────────────────
-function getLineoAt(cx, cy) {
-  let best = null, bestDist = Infinity;
-  for (const l of Object.values(lineos)) {
-    const z = ZONAS[l.zona];
-    if (cx < z.lx1-5 || cx > z.lx2+5 || cy < z.by || cy > z.by+z.bh) continue;
-    const d = Math.abs(cy - l.y);
-    const r = hitRadius[l.zona] || 10;
-    if (d <= r && d < bestDist) { bestDist = d; best = l; }
-  }
-  return best;
-}
-
-// ── Panel desplegable ─────────────────────────────────────────────────
-let activePanel = null;
-function togglePanel(name) {
-  const content = document.getElementById('panelContent');
-  const tabs = { progreso:'paneProgreso', leyenda:'paneLeyenda', incidencias:'paneIncidencias' };
-  const tabBtns = { progreso:'tabProgreso', leyenda:'tabLeyenda', incidencias:'tabInc' };
-
-  if (activePanel === name) {
-    // Cerrar
-    content.classList.remove('open');
-    document.getElementById(tabBtns[name]).classList.remove('active');
-    activePanel = null;
-    return;
-  }
-  // Ocultar todos
-  Object.values(tabs).forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('active');
-  });
-  Object.values(tabBtns).forEach(id => document.getElementById(id).classList.remove('active'));
-
-  // Mostrar seleccionado
-  document.getElementById(tabs[name]).classList.add('active');
-  document.getElementById(tabBtns[name]).classList.add('active');
-  content.classList.add('open');
-  activePanel = name;
-}
-
-// ── Stats ─────────────────────────────────────────────────────────────
-function updateStats() {
-  const hechos = Object.values(lineos).filter(l=>l.estado==='hecho').length;
-  const pend = TOTAL - hechos;
-  const pct = Math.round(hechos/TOTAL*100);
-  // Completos
-  document.getElementById('numHechos').innerHTML = `${hechos}<span>/${TOTAL}</span>`;
-  document.getElementById('progBar').style.width = pct+'%';
-  document.getElementById('pendLabel').textContent = `${pend} pendientes`;
-  document.getElementById('pctLabel').textContent = pct+'%';
-  document.getElementById('numInc').textContent = incidencias.length;
-  // Mini
-  document.getElementById('miniHechos').textContent = hechos;
-  document.getElementById('miniBar').style.width = pct+'%';
-  document.getElementById('miniPct').textContent = pct+'%';
-  renderInc();
-}
-
-// ── Herramienta ───────────────────────────────────────────────────────
-function setTool(t) {
-  tool = t;
-  document.getElementById('toolMarcar').classList.toggle('active', t==='marcar');
-  document.getElementById('toolInc').classList.toggle('active', t==='incidencia');
-}
-
-// ── Modal ─────────────────────────────────────────────────────────────
+// ── Modal ────────────────────────────────────────────────────────
 function cerrarModal() {
   document.getElementById('modalOverlay').classList.add('hidden');
-  pendingKey = null;
-}
-function confirmarIncidencia() {
-  if (!pendingKey) return;
-  const tipo = document.getElementById('incTipo').value;
-  const nota = document.getElementById('incNota').value.trim();
-  const podador = document.getElementById('podadorSelect').value;
-  const l = lineos[pendingKey];
-  const inc = {
-    id: Date.now(), lineoKey: pendingKey,
-    zona: l.zona, lineoNum: l.num, tipo, nota, podador,
-    fecha: new Date().toLocaleDateString('es-ES')+' '+
-           new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})
-  };
-  l.incidencias.push(inc); incidencias.push(inc);
-  document.getElementById('incNota').value = '';
-  cerrarModal(); saveState(); draw();
-  showToast(`⚠️ Incidencia guardada — L${l.num}`);
+  pendingKey=null;
 }
 
-// ── Lista incidencias ─────────────────────────────────────────────────
+function confirmarIncidencia() {
+  if (!pendingKey) return;
+  const tipo   = document.getElementById('incTipo').value;
+  const nota   = document.getElementById('incNota').value.trim();
+  const podador= document.getElementById('podadorSelect').value;
+  const l=lineos[pendingKey];
+  const inc={
+    id:Date.now(), lineoKey:pendingKey,
+    zona:l.zona, lineoNum:l.num, tipo, nota, podador,
+    cx: pendingClickCX, cy: pendingClickCY,   // posición exacta del click
+    fecha:new Date().toLocaleDateString('es-ES')+' '+
+          new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})
+  };
+  l.incidencias.push(inc); incidencias.push(inc);
+  document.getElementById('incNota').value='';
+  cerrarModal(); saveState(); draw();
+  showToast(`🔴 Incidencia en ${ZONAS[l.zona].label} · L${l.num}`);
+}
+
+// ── Lista incidencias ────────────────────────────────────────────
 function renderInc() {
-  const el = document.getElementById('incList');
+  const el=document.getElementById('incList');
   if (!incidencias.length) {
-    el.innerHTML = '<div style="font-size:0.75rem;color:var(--texto-dim);padding:6px">Sin incidencias</div>';
-    return;
+    el.innerHTML='<div style="font-size:0.75rem;color:var(--texto-dim);padding:6px">Sin incidencias</div>'; return;
   }
-  const lab = { alambre:'🔴 Alambre', tensor:'🟣 Tensor', otro:'⚪ Otro' };
-  el.innerHTML = incidencias.map(inc => `
+  const lab={alambre:'Alambre roto', tensor:'Tensor', otro:'Otro'};
+  el.innerHTML=incidencias.map(inc=>`
     <div class="inc-item">
       <div class="inc-top">
         <span class="inc-num">${ZONAS[inc.zona].label.replace('Zona ','')} L${inc.lineoNum}</span>
@@ -876,24 +560,66 @@ function renderInc() {
       <div class="inc-podador">${inc.podador} · ${inc.fecha}</div>
     </div>`).join('');
 }
+
 function eliminarInc(id) {
-  const inc = incidencias.find(i=>i.id===id); if (!inc) return;
-  incidencias = incidencias.filter(i=>i.id!==id);
-  const l = lineos[inc.lineoKey];
-  if (l) l.incidencias = l.incidencias.filter(i=>i.id!==id);
+  const inc=incidencias.find(i=>i.id===id); if(!inc) return;
+  incidencias=incidencias.filter(i=>i.id!==id);
+  const l=lineos[inc.lineoKey];
+  if(l) l.incidencias=l.incidencias.filter(i=>i.id!==id);
   saveState(); draw();
 }
 
-// ── Reset / Export ────────────────────────────────────────────────────
+// ── Stats ────────────────────────────────────────────────────────
+function updateStats() {
+  const hechos=Object.values(lineos).filter(l=>l.estado==='hecho').length;
+  const pend=TOTAL-hechos, pct=Math.round(hechos/TOTAL*100);
+  document.getElementById('numHechos').innerHTML=`${hechos}<span>/${TOTAL}</span>`;
+  document.getElementById('progBar').style.width=pct+'%';
+  document.getElementById('pendLabel').textContent=`${pend} pendientes`;
+  document.getElementById('pctLabel').textContent=pct+'%';
+  document.getElementById('numInc').textContent=incidencias.length;
+  document.getElementById('miniHechos').textContent=hechos;
+  document.getElementById('miniBar').style.width=pct+'%';
+  document.getElementById('miniPct').textContent=pct+'%';
+  renderInc();
+}
+
+// ── Panel desplegable ────────────────────────────────────────────
+let activePanel=null;
+const TABS={progreso:'paneProgreso', leyenda:'paneLeyenda', incidencias:'paneIncidencias'};
+const TABBTN={progreso:'tabProgreso', leyenda:'tabLeyenda', incidencias:'tabIncidencias'};
+function togglePanel(name) {
+  const content=document.getElementById('panelContent');
+  if (activePanel===name) {
+    content.classList.remove('open');
+    document.getElementById(TABBTN[name]).classList.remove('active');
+    activePanel=null; return;
+  }
+  Object.values(TABS).forEach(id=>document.getElementById(id).classList.remove('active'));
+  Object.values(TABBTN).forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(TABS[name]).classList.add('active');
+  document.getElementById(TABBTN[name]).classList.add('active');
+  content.classList.add('open');
+  activePanel=name;
+}
+
+// ── Herramienta ──────────────────────────────────────────────────
+function setTool(t) {
+  tool=t;
+  document.getElementById('toolMarcar').classList.toggle('active',t==='marcar');
+  document.getElementById('toolInc').classList.toggle('active',t==='incidencia');
+}
+
+// ── Reset / Export ───────────────────────────────────────────────
 function resetAll() {
   if (!confirm('¿Reiniciar todo el progreso?')) return;
-  initLineos(); incidencias = []; saveState(); draw();
+  initLineos(); incidencias=[]; saveState(); draw();
 }
 function exportarResumen() {
-  const hechos = Object.values(lineos).filter(l=>l.estado==='hecho');
-  const pend = Object.values(lineos).filter(l=>l.estado==='pendiente');
-  const pct = Math.round(hechos.length/TOTAL*100);
-  let txt = `=== RESUMEN DE PODAS ===\nFecha: ${new Date().toLocaleDateString('es-ES')}\nProgreso: ${hechos.length}/${TOTAL} (${pct}%)\n\n`;
+  const hechos=Object.values(lineos).filter(l=>l.estado==='hecho');
+  const pend=Object.values(lineos).filter(l=>l.estado==='pendiente');
+  const pct=Math.round(hechos.length/TOTAL*100);
+  let txt=`=== RESUMEN DE PODAS ===\nFecha: ${new Date().toLocaleDateString('es-ES')}\nProgreso: ${hechos.length}/${TOTAL} (${pct}%)\n\n`;
   for (const [zid,z] of Object.entries(ZONAS)) {
     const zh=hechos.filter(l=>l.zona===zid), zp=pend.filter(l=>l.zona===zid);
     txt+=`── ${z.label} ──\nHechos (${zh.length}): ${zh.map(l=>'L'+l.num+(l.podador?' ['+l.podador+']':'')).join(', ')||'—'}\nPendientes (${zp.length}): ${zp.map(l=>'L'+l.num).join(', ')||'—'}\n\n`;
@@ -905,33 +631,41 @@ function exportarResumen() {
   a.download=`podas_${new Date().toISOString().slice(0,10)}.txt`; a.click();
 }
 
-// ── Persistencia ──────────────────────────────────────────────────────
+// ── Toast ────────────────────────────────────────────────────────
+let toastTimer=null;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── Persistencia ─────────────────────────────────────────────────
 function saveState() {
   try {
-    localStorage.setItem('vina_v5', JSON.stringify({
-      lineos: Object.fromEntries(Object.entries(lineos).map(([k,l])=>
+    localStorage.setItem('vina_v6', JSON.stringify({
+      lineos:Object.fromEntries(Object.entries(lineos).map(([k,l])=>
         [k,{estado:l.estado,podador:l.podador,fecha:l.fecha,incidencias:l.incidencias}])),
       incidencias
     }));
-  } catch(e) {}
+  } catch(e){}
 }
 function loadState() {
   try {
-    const raw=localStorage.getItem('vina_v5'); if(!raw) return;
+    const raw=localStorage.getItem('vina_v6'); if(!raw) return;
     const data=JSON.parse(raw);
     for (const [k,s] of Object.entries(data.lineos||{}))
-      if (lineos[k]) { lineos[k].estado=s.estado; lineos[k].podador=s.podador; lineos[k].fecha=s.fecha; lineos[k].incidencias=s.incidencias||[]; }
+      if (lineos[k]){ lineos[k].estado=s.estado; lineos[k].podador=s.podador; lineos[k].fecha=s.fecha; lineos[k].incidencias=s.incidencias||[]; }
     incidencias=data.incidencias||[];
-  } catch(e) {}
+  } catch(e){}
 }
 
-// ── Arranque ──────────────────────────────────────────────────────────
+// ── Arranque ─────────────────────────────────────────────────────
 initLineos();
 calcHitRadius();
 loadState();
 draw();
-// Dar tiempo al DOM para calcular tamaños
-setTimeout(resetZoom, 50);
+setTimeout(resetZoom, 60);
 </script>
 </body>
 </html>
