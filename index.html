@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Gestión de Podas — Viña</title>
+<title>Gestión de Podas - Viña</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&display=swap');
   :root {
@@ -224,6 +224,8 @@
   <div id="toolbar">
     <button class="tool-btn active" id="toolMarcar" onclick="setTool('marcar')">✅ Marcar podado</button>
     <button class="tool-btn inc-tool" id="toolInc"  onclick="setTool('incidencia')">🔴 Incidencia</button>
+    <button class="zoom-btn" id="btnUndo" onclick="undo()" title="Deshacer" style="opacity:0.4" disabled>↩</button>
+    <button class="zoom-btn" id="btnRedo" onclick="redo()" title="Rehacer"  style="opacity:0.4" disabled>↪</button>
     <div class="zoom-btns">
       <button class="zoom-btn" onclick="zoomBy(0.35)">＋</button>
       <button class="zoom-btn" onclick="zoomBy(-0.35)">－</button>
@@ -264,9 +266,9 @@
 <div id="lineoTooltip"></div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════
+// ==================================================================
 //  Canvas alta resolución · Zonas sin solapamiento · Firebase sync
-// ══════════════════════════════════════════════════════════════════
+// ==================================================================
 
 const W = 2320, H = 4200;
 const canvas = document.getElementById('vinaCanvas');
@@ -291,7 +293,7 @@ const ZONAS = {
        lx1:1350, lx2:2220, ly1:90,  ly2:4100 }
 };
 
-// ── Estado ────────────────────────────────────────────────────────
+// -- Estado --------------------------------------------------------
 let lineos      = {};
 let incidencias = [];
 let tool        = 'marcar';
@@ -304,7 +306,7 @@ let toastTimer  = null;
 let lastHash    = '';
 let activePanel = null;
 
-// ── Zoom / Pan ────────────────────────────────────────────────────
+// -- Zoom / Pan ----------------------------------------------------
 let scale = 1, panX = 0, panY = 0;
 
 function applyTransform() {
@@ -331,7 +333,7 @@ function resetZoom() {
   applyTransform();
 }
 
-// ── Inicializar líneos ────────────────────────────────────────────
+// -- Inicializar líneos --------------------------------------------
 function initLineos() {
   lineos = {};
   for (const [zid, z] of Object.entries(ZONAS)) {
@@ -357,7 +359,7 @@ function calcHitRadius() {
   }
 }
 
-// ── Hit test ──────────────────────────────────────────────────────
+// -- Hit test ------------------------------------------------------
 function getLineoAt(cx, cy) {
   let best = null, bestDist = Infinity;
   for (const l of Object.values(lineos)) {
@@ -369,12 +371,12 @@ function getLineoAt(cx, cy) {
   return best;
 }
 
-// ── Color ─────────────────────────────────────────────────────────
+// -- Color ---------------------------------------------------------
 function lineColor(l) {
   return l.estado === 'hecho' ? '#52b788' : '#666666';
 }
 
-// ── Dibujo ────────────────────────────────────────────────────────
+// -- Dibujo --------------------------------------------------------
 function draw() {
   ctx.clearRect(0, 0, W, H);
 
@@ -448,7 +450,7 @@ function draw() {
   updateStats();
 }
 
-// ── Tooltip ───────────────────────────────────────────────────────
+// -- Tooltip -------------------------------------------------------
 function showLineoInfo(l, screenX, screenY) {
   const z   = ZONAS[l.zona];
   const tip = document.getElementById('lineoTooltip');
@@ -480,7 +482,7 @@ function hideTooltip() {
   document.getElementById('lineoTooltip').style.display = 'none';
 }
 
-// ── Toast ─────────────────────────────────────────────────────────
+// -- Toast ---------------------------------------------------------
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -488,7 +490,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// ── Click handler ─────────────────────────────────────────────────
+// -- Click handler -------------------------------------------------
 function handleClick(cx, cy) {
   const l = getLineoAt(cx, cy);
   if (!l) return;
@@ -497,12 +499,12 @@ function handleClick(cx, cy) {
     if (l.estado === 'hecho') {
       l.podador = document.getElementById('podadorSelect').value;
       l.fecha   = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      showToast(`✅ ${ZONAS[l.zona].label} · Líneo ${l.num} — Podado`);
+      showToast(`✅ ${ZONAS[l.zona].label} · Líneo ${l.num} - Podado`);
     } else {
       l.podador = null; l.fecha = null;
-      showToast(`⬜ ${ZONAS[l.zona].label} · Líneo ${l.num} — Desmarcado`);
+      showToast(`⬜ ${ZONAS[l.zona].label} · Líneo ${l.num} - Desmarcado`);
     }
-    saveState(); draw();
+    saveState(); draw(); snapshot();
   } else {
     pendingKey     = l.key;
     pendingClickCX = cx;
@@ -511,7 +513,7 @@ function handleClick(cx, cy) {
   }
 }
 
-// ── Touch ─────────────────────────────────────────────────────────
+// -- Touch ---------------------------------------------------------
 const wrap = document.getElementById('canvasWrap');
 let isPanning=false, touchMoved=false, lastPanX=0, lastPanY=0;
 let touchStartTime=0, touchTapX=0, touchTapY=0;
@@ -582,7 +584,7 @@ wrap.addEventListener('touchend', e => {
   isPanning = false;
 },{ passive:false });
 
-// ── Mouse ─────────────────────────────────────────────────────────
+// -- Mouse ---------------------------------------------------------
 let mousePanning=false, mouseMoved=false, lastMX=0, lastMY=0;
 
 wrap.addEventListener('mousedown', e => {
@@ -616,7 +618,7 @@ wrap.addEventListener('wheel', e => {
   zoomBy(e.deltaY<0?0.2:-0.2, e.clientX-r.left, e.clientY-r.top);
 },{ passive:false });
 
-// ── Modal ─────────────────────────────────────────────────────────
+// -- Modal ---------------------------------------------------------
 function cerrarModal() {
   document.getElementById('modalOverlay').classList.add('hidden');
   pendingKey = null;
@@ -637,11 +639,11 @@ function confirmarIncidencia() {
   };
   l.incidencias.push(inc); incidencias.push(inc);
   document.getElementById('incNota').value = '';
-  cerrarModal(); saveState(); draw();
+  cerrarModal(); saveState(); draw(); snapshot();
   showToast(`🔴 Incidencia en ${ZONAS[l.zona].label} · L${l.num}`);
 }
 
-// ── Lista incidencias ─────────────────────────────────────────────
+// -- Lista incidencias ---------------------------------------------
 function renderInc() {
   const el = document.getElementById('incList');
   if (!incidencias.length) {
@@ -665,10 +667,10 @@ function eliminarInc(id) {
   incidencias = incidencias.filter(i=>i.id!==id);
   const l = lineos[inc.lineoKey];
   if (l) l.incidencias = l.incidencias.filter(i=>i.id!==id);
-  saveState(); draw();
+  saveState(); draw(); snapshot();
 }
 
-// ── Podadores stats ───────────────────────────────────────────────
+// -- Podadores stats
 function renderPodadores() {
   const el = document.getElementById('podadoresStats');
   if (!el) return;
@@ -687,7 +689,7 @@ function renderPodadores() {
   }).join('');
 }
 
-// ── Stats ─────────────────────────────────────────────────────────
+// -- Stats ---------------------------------------------------------
 function updateStats() {
   const hechos = Object.values(lineos).filter(l=>l.estado==='hecho').length;
   const pend   = TOTAL - hechos;
@@ -704,7 +706,7 @@ function updateStats() {
   renderPodadores();
 }
 
-// ── Panel ─────────────────────────────────────────────────────────
+// -- Panel ---------------------------------------------------------
 const TABS    = {progreso:'paneProgreso', podadores:'panePodadores', leyenda:'paneLeyenda', incidencias:'paneIncidencias'};
 const TABBTN  = {progreso:'tabProgreso',  podadores:'tabPodadores',  leyenda:'tabLeyenda',  incidencias:'tabIncidencias'};
 
@@ -723,14 +725,55 @@ function togglePanel(name) {
   activePanel = name;
 }
 
-// ── Herramienta ───────────────────────────────────────────────────
+// -- Historial deshacer/rehacer ------------------------------------
+let undoStack = [], historyIndex = -1;
+
+function snapshot() {
+  const state = JSON.stringify(buildSaveData());
+  // Descartar futuros si estamos en medio del historial
+  undoStack = undoStack.slice(0, historyIndex + 1);
+  undoStack.push(state);
+  if (undoStack.length > 50) undoStack.shift(); // máximo 50 pasos
+  historyIndex = undoStack.length - 1;
+  updateUndoRedo();
+}
+
+function updateUndoRedo() {
+  const u = document.getElementById('btnUndo');
+  const r = document.getElementById('btnRedo');
+  if (u) { u.disabled = historyIndex <= 0; u.style.opacity = historyIndex <= 0 ? '0.4' : '1'; }
+  if (r) { r.disabled = historyIndex >= undoStack.length-1; r.style.opacity = historyIndex >= undoStack.length-1 ? '0.4' : '1'; }
+}
+
+function applySnapshot(state) {
+  const data = JSON.parse(state);
+  applyData(data);
+  saveState();
+  draw();
+}
+
+function undo() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  applySnapshot(undoStack[historyIndex]);
+  updateUndoRedo();
+  showToast('↩ Acción deshecha');
+}
+
+function redo() {
+  if (historyIndex >= undoStack.length - 1) return;
+  historyIndex++;
+  applySnapshot(undoStack[historyIndex]);
+  updateUndoRedo();
+  showToast('↪ Acción rehecha');
+}
 function setTool(t) {
   tool = t;
   document.getElementById('toolMarcar').classList.toggle('active', t==='marcar');
   document.getElementById('toolInc').classList.toggle('active',    t==='incidencia');
 }
 
-// ── Modo claro / oscuro ───────────────────────────────────────────
+// -- Modo claro / oscuro -------------------------------------------
 function toggleModo() {
   modoClaro = !modoClaro;
   document.body.classList.toggle('claro', modoClaro);
@@ -738,7 +781,7 @@ function toggleModo() {
   draw();
 }
 
-// ── Reset / Export ────────────────────────────────────────────────
+// -- Reset / Export ------------------------------------------------
 function resetAll() {
   if (!confirm('¿Reiniciar todo el progreso? Afectará a todos los dispositivos.')) return;
   initLineos(); incidencias = []; saveState(); draw();
@@ -751,21 +794,21 @@ function exportarResumen() {
   let txt = `=== RESUMEN DE PODAS ===\nFecha: ${new Date().toLocaleDateString('es-ES')}\nProgreso: ${hechos.length}/${TOTAL} (${pct}%)\n\n`;
   for (const [zid,z] of Object.entries(ZONAS)) {
     const zh=hechos.filter(l=>l.zona===zid), zp=pend.filter(l=>l.zona===zid);
-    txt+=`── ${z.label} ──\nHechos (${zh.length}): ${zh.map(l=>'L'+l.num+(l.podador?' ['+l.podador+']':'')).join(', ')||'—'}\nPendientes (${zp.length}): ${zp.map(l=>'L'+l.num).join(', ')||'—'}\n\n`;
+    txt+=`-- ${z.label} --\nHechos (${zh.length}): ${zh.map(l=>'L'+l.num+(l.podador?' ['+l.podador+']':'')).join(', ')||'-'}\nPendientes (${zp.length}): ${zp.map(l=>'L'+l.num).join(', ')||'-'}\n\n`;
   }
-  txt += `── Por podador ──\n`;
+  txt += `-- Por podador --\n`;
   PODADORES.forEach(p => {
     const n = hechos.filter(l=>l.podador===p).length;
     txt += `  ${p}: ${n} líneos\n`;
   });
-  txt += `\n── Incidencias (${incidencias.length}) ──\n`;
-  incidencias.forEach(inc=>txt+=`  ${ZONAS[inc.zona].label} · L${inc.lineoNum}: ${inc.tipo}${inc.nota?' — '+inc.nota:''} [${inc.podador}] ${inc.fecha}\n`);
+  txt += `\n-- Incidencias (${incidencias.length}) --\n`;
+  incidencias.forEach(inc=>txt+=`  ${ZONAS[inc.zona].label} · L${inc.lineoNum}: ${inc.tipo}${inc.nota?' - '+inc.nota:''} [${inc.podador}] ${inc.fecha}\n`);
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
   a.download = `podas_${new Date().toISOString().slice(0,10)}.txt`; a.click();
 }
 
-// ── Firebase ──────────────────────────────────────────────────────
+// -- Firebase ------------------------------------------------------
 function setStatus(msg) {
   const el = document.getElementById('syncStatus');
   if (el) el.textContent = msg;
@@ -783,7 +826,7 @@ async function saveState() {
   const data = buildSaveData();
   try {
     await fetch(FB_URL, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-  } catch(e) { showToast('⚠️ Sin conexión — guardado localmente'); }
+  } catch(e) { showToast('⚠️ Sin conexión - guardado localmente'); }
   try { localStorage.setItem('vina_backup', JSON.stringify(data)); } catch(e){}
 }
 
@@ -818,13 +861,14 @@ async function syncLoop() {
   } catch(e){}
 }
 
-// ── Arranque ──────────────────────────────────────────────────────
+// -- Arranque ------------------------------------------------------
 initLineos();
 calcHitRadius();
 draw();
 loadState().then(() => {
   draw();
   lastHash = JSON.stringify(buildSaveData());
+  snapshot(); // estado inicial
   setInterval(syncLoop, 8000);
 });
 setTimeout(resetZoom, 60);
