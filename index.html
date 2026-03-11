@@ -82,9 +82,10 @@
   .inc-top { display:flex; justify-content:space-between; align-items:center; }
   .inc-num { font-weight:600; }
   .inc-type { font-size:0.66rem; padding:2px 5px; border-radius:8px; font-weight:600; }
-  .inc-type.alambre { background:#4a3000; color:#f4a261; }
-  .inc-type.tensor  { background:#2d1a4a; color:#c77dff; }
-  .inc-type.otro    { background:#2a2a2a; color:#adb5bd; }
+  .inc-type.alambre  { background:#4a0a0a; color:#e63946; }
+  .inc-type.extensor { background:#4a3d00; color:#ffd166; }
+  .inc-type.poste    { background:#4a2000; color:#f4a261; }
+  .inc-type.tensar   { background:#2d1a4a; color:#c77dff; }
   .inc-nota    { color:var(--texto-dim); font-style:italic; }
   .inc-podador { color:var(--texto-dim); font-size:0.65rem; }
   .inc-del-btn { background:none; border:none; cursor:pointer; color:#555; font-size:0.7rem; padding:2px 4px; }
@@ -204,7 +205,10 @@
         <h3>Leyenda</h3>
         <div class="ley-item"><div class="ley-dot gris"></div>Sin podar</div>
         <div class="ley-item"><div class="ley-dot verde"></div>Podado</div>
-        <div class="ley-item"><div class="ley-circ rojo"></div>Incidencia</div>
+        <div class="ley-item"><div class="ley-circ" style="background:#e63946"></div>Alambre roto</div>
+        <div class="ley-item"><div class="ley-circ" style="background:#ffd166"></div>Cambiar extensor</div>
+        <div class="ley-item"><div class="ley-circ" style="background:#f4a261"></div>Poste roto</div>
+        <div class="ley-item"><div class="ley-circ" style="background:#c77dff"></div>Tensar alambre</div>
       </div>
     </div>
     <div class="panel-inner" id="paneIncidencias">
@@ -239,9 +243,10 @@
     <div>
       <label>Tipo</label>
       <select id="incTipo">
-        <option value="alambre">Alambre roto</option>
-        <option value="tensor">Tensor a cambiar</option>
-        <option value="otro">Otra incidencia</option>
+        <option value="alambre">🔴 Alambre roto</option>
+        <option value="extensor">🟡 Cambiar extensor</option>
+        <option value="poste">🟠 Poste roto</option>
+        <option value="tensar">🟣 Tensar alambre</option>
       </select>
     </div>
     <div>
@@ -421,17 +426,20 @@ function draw() {
     ctx.fillText(l.num, x1-8, y + fs*0.35);
   }
 
+  const INC_COLORS = { alambre:'#e63946', extensor:'#ffd166', poste:'#f4a261', tensar:'#c77dff' };
+
   for (const l of Object.values(lineos)) {
     for (const inc of l.incidencias) {
-      const ix = inc.cx !== undefined ? inc.cx : l.x1+(l.x2-l.x1)*0.5;
-      const iy = inc.cy !== undefined ? inc.cy : l.y;
+      const ix  = inc.cx !== undefined ? inc.cx : l.x1+(l.x2-l.x1)*0.5;
+      const iy  = inc.cy !== undefined ? inc.cy : l.y;
+      const col = INC_COLORS[inc.tipo] || '#e63946';
       ctx.save();
-      ctx.shadowColor='#e63946'; ctx.shadowBlur=12;
-      ctx.fillStyle='#e63946';
-      ctx.beginPath(); ctx.arc(ix, iy, 9, 0, Math.PI*2); ctx.fill();
+      ctx.shadowColor = col; ctx.shadowBlur = 14;
+      ctx.fillStyle   = col;
+      ctx.beginPath(); ctx.arc(ix, iy, 18, 0, Math.PI*2); ctx.fill();
       ctx.restore();
-      ctx.fillStyle='white'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
-      ctx.fillText('!', ix, iy+4);
+      ctx.fillStyle = 'white'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('!', ix, iy+6);
     }
   }
 
@@ -450,9 +458,10 @@ function showLineoInfo(l, screenX, screenY) {
     html += `<br>⬜ Sin podar`;
   }
   if (l.incidencias.length > 0) {
-    const lab = {alambre:'Alambre roto', tensor:'Tensor', otro:'Otro'};
+    const lab      = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre'};
+    const dotColor = {alambre:'🔴', extensor:'🟡', poste:'🟠', tensar:'🟣'};
     l.incidencias.forEach(inc => {
-      html += `<br>🔴 ${lab[inc.tipo]}${inc.nota ? ': '+inc.nota : ''}`;
+      html += `<br>${dotColor[inc.tipo]||'🔴'} ${lab[inc.tipo]||inc.tipo}${inc.nota ? ': '+inc.nota : ''}`;
     });
   }
   tip.innerHTML = html;
@@ -636,7 +645,7 @@ function renderInc() {
   if (!incidencias.length) {
     el.innerHTML='<div style="font-size:0.75rem;color:var(--texto-dim);padding:6px">Sin incidencias</div>'; return;
   }
-  const lab = {alambre:'Alambre roto', tensor:'Tensor', otro:'Otro'};
+  const lab = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre'};
   el.innerHTML = incidencias.map(inc => `
     <div class="inc-item">
       <div class="inc-top">
@@ -816,10 +825,6 @@ loadState().then(() => {
   lastHash = JSON.stringify(buildSaveData());
   setInterval(syncLoop, 8000);
 });
-setTimeout(resetZoom, 60);
-</script>
-</body>
-</html>
 setTimeout(resetZoom, 60);
 </script>
 </body>
