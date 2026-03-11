@@ -263,7 +263,7 @@
 //  Canvas alta resolución · Zonas sin solapamiento · Firebase sync
 // ══════════════════════════════════════════════════════════════════
 
-const W = 2760, H = 2040;
+const W = 2320, H = 4200;
 const canvas = document.getElementById('vinaCanvas');
 const ctx    = canvas.getContext('2d');
 canvas.width = W; canvas.height = H;
@@ -272,16 +272,18 @@ const TOTAL = 301;
 const PODADORES = ['Carmen','Luis Padre','Andrea','Mario','Luis Hijo','Elena'];
 const FB_URL = 'https://uva-de-vida-38a5d-default-rtdb.europe-west1.firebasedatabase.app/podas.json';
 
+// Todas las zonas con la misma anchura (1100px) y bien separadas
+// Canvas más alto → más espacio entre líneos
 const ZONAS = {
   R: { label:'Zona Roja',  total:33,  zoneColor:'#e63946',
-       bx:30,   by:30,  bw:1100, bh:520,
-       lx1:160, lx2:1110, ly1:80,  ly2:530 },
+       bx:30,    by:30,   bw:1100, bh:900,
+       lx1:160,  lx2:1110, ly1:90,  ly2:900 },
   G: { label:'Zona Verde', total:118, zoneColor:'#52b788',
-       bx:30,   by:580, bw:1100, bh:1420,
-       lx1:160, lx2:1110, ly1:640, ly2:1960 },
+       bx:30,    by:960,  bw:1100, bh:3180,
+       lx1:160,  lx2:1110, ly1:1020, ly2:4100 },
   B: { label:'Zona Azul',  total:150, zoneColor:'#4895ef',
-       bx:1160, by:30,  bw:1570, bh:1970,
-       lx1:1290, lx2:2700, ly1:80, ly2:1960 }
+       bx:1180,  by:30,   bw:1100, bh:4110,
+       lx1:1310, lx2:2260, ly1:90,  ly2:4100 }
 };
 
 // ── Estado ────────────────────────────────────────────────────────
@@ -397,10 +399,6 @@ function draw() {
     ctx.fillStyle = z.zoneColor;
     ctx.font = 'bold 32px DM Sans'; ctx.textAlign = 'left';
     ctx.fillText(`${z.label}  ·  ${hechos}/${z.total}  (${pct}%)`, z.bx+24, z.by+44);
-    const numMin = zid==='R' ? 119 : 1;
-    const numMax = zid==='R' ? 151 : z.total;
-    ctx.fillStyle = z.zoneColor+'66'; ctx.font = '22px DM Sans';
-    ctx.fillText(`↑ ${numMax}   ↓ ${numMin}`, z.bx+24, z.by+z.bh-16);
   }
 
   for (const l of Object.values(lineos)) {
@@ -818,6 +816,10 @@ loadState().then(() => {
   lastHash = JSON.stringify(buildSaveData());
   setInterval(syncLoop, 8000);
 });
+setTimeout(resetZoom, 60);
+</script>
+</body>
+</html>
 setTimeout(resetZoom, 60);
 </script>
 </body>
