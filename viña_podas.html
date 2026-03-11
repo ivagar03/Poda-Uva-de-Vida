@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestión de Podas — Viña</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --verde: #2d6a4f;
+    --verde-claro: #52b788;
+    --rojo: #c1121f;
+    --rojo-claro: #e63946;
+    --naranja: #f4a261;
+    --azul: #4895ef;
+    --fondo: #0d1b0f;
+    --panel: #111f14;
+    --borde: #2a3d2c;
+    --texto: #d8f3dc;
+    --texto-dim: #7aab85;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--borde);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 3px;
+    color: var(--verde-claro);
+  }
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .podador-select {
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    color: var(--texto);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .btn {
+    padding: 6px 14px; border-radius: 6px; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-reset { background: #2a1a1a; color: var(--rojo-claro); border: 1px solid var(--rojo); }
+  .btn-reset:hover { background: var(--rojo); color: white; }
+  .btn-export { background: var(--verde); color: white; }
+  .btn-export:hover { background: var(--verde-claro); }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 230px; min-width: 200px;
+    background: var(--panel);
+    border-right: 1px solid var(--borde);
+    display: flex; flex-direction: column;
+    padding: 14px; gap: 14px; overflow-y: auto;
+  }
+  .sidebar h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 2px; font-size: 0.95rem;
+    color: var(--texto-dim);
+    border-bottom: 1px solid var(--borde);
+    padding-bottom: 5px;
+  }
+
+  /* Progreso total único */
+  .progreso-total {
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .progreso-total .big-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem; line-height: 1;
+    color: var(--verde-claro);
+  }
+  .progreso-total .big-num span {
+    font-size: 1.2rem; color: var(--texto-dim);
+  }
+  .progreso-total .pct-label {
+    font-size: 0.75rem; color: var(--texto-dim);
+    letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 8px; margin-top: 2px;
+  }
+  .prog-bar-wrap {
+    background: #1a2e1c; border-radius: 20px;
+    height: 8px; overflow: hidden;
+  }
+  .prog-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--verde), var(--verde-claro));
+    border-radius: 20px; transition: width 0.5s ease;
+  }
+  .prog-sub {
+    font-size: 0.7rem; color: var(--texto-dim);
+    margin-top: 6px; display: flex; justify-content: space-between;
+  }
+
+  /* Incidencias contador */
+  .inc-count {
+    background: var(--fondo); border: 1px solid var(--borde);
+    border-radius: 7px; padding: 8px 10px; text-align: center;
+  }
+  .inc-count .n { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--naranja); line-height:1; }
+  .inc-count .l { font-size: 0.68rem; color: var(--texto-dim); letter-spacing:1px; text-transform:uppercase; }
+
+  /* Leyenda */
+  .leyenda { display: flex; flex-direction: column; gap: 5px; }
+  .leyenda-item { display: flex; align-items: center; gap: 7px; font-size: 0.78rem; color: var(--texto-dim); }
+  .dot { width: 12px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+  .dot-p  { background: #e63946; }
+  .dot-h  { background: #52b788; }
+  .dot-al { background: #f4a261; }
+  .dot-te { background: #9b5de5; }
+  .dot-ot { background: #adb5bd; }
+
+  /* Incidencias lista */
+  .incidencias-list {
+    display: flex; flex-direction: column; gap: 5px;
+    max-height: 220px; overflow-y: auto;
+  }
+  .inc-item {
+    background: var(--fondo); border: 1px solid var(--borde);
+    border-radius: 5px; padding: 7px 9px;
+    font-size: 0.75rem; display: flex; flex-direction: column; gap: 2px;
+  }
+  .inc-top { display: flex; justify-content: space-between; align-items: center; }
+  .inc-num { font-weight: 600; color: var(--texto); }
+  .inc-type { font-size: 0.67rem; padding: 2px 5px; border-radius: 8px; font-weight: 600; }
+  .inc-type.alambre { background: #4a3000; color: #f4a261; }
+  .inc-type.tensor  { background: #2d1a4a; color: #c77dff; }
+  .inc-type.otro    { background: #2a2a2a; color: #adb5bd; }
+  .inc-nota    { color: var(--texto-dim); font-style: italic; }
+  .inc-podador { color: var(--texto-dim); font-size: 0.66rem; }
+  .inc-del-btn { background: none; border: none; cursor: pointer; color: #555; font-size: 0.72rem; }
+  .inc-del-btn:hover { color: #e63946; }
+
+  /* ── MAPA ── */
+  .mapa-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .mapa-toolbar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--borde);
+    padding: 7px 14px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    font-size: 0.8rem; color: var(--texto-dim);
+  }
+  .tool-btn {
+    padding: 5px 12px; border-radius: 5px; border: 1px solid var(--borde);
+    background: var(--fondo); color: var(--texto-dim); cursor: pointer;
+    font-size: 0.8rem; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+  }
+  .tool-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
+  .tool-btn.inc-tool.active { background: var(--naranja); color: #1a0a00; border-color: var(--naranja); }
+  .tool-btn:hover:not(.active) { border-color: var(--verde-claro); color: var(--verde-claro); }
+
+  .canvas-container {
+    flex: 1; overflow: auto; background: #091409;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 20px;
+  }
+  canvas { cursor: pointer; display: block; border-radius: 6px; box-shadow: 0 0 50px rgba(0,0,0,0.7); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; backdrop-filter: blur(4px);
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--borde);
+    border-radius: 12px; padding: 24px; width: 320px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .modal h3 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; font-size: 1.2rem; color: var(--naranja); }
+  .modal label { font-size: 0.78rem; color: var(--texto-dim); display: block; margin-bottom: 3px; }
+  .modal select, .modal textarea {
+    width: 100%; background: var(--fondo); border: 1px solid var(--borde);
+    color: var(--texto); border-radius: 6px; padding: 7px 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+  }
+  .modal textarea { resize: vertical; min-height: 60px; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-cancel  { background: var(--fondo); color: var(--texto-dim); border: 1px solid var(--borde); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn-confirm { background: var(--naranja); color: #1a0a00; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+  .tooltip {
+    position: fixed; background: #1a2e1c; border: 1px solid var(--borde);
+    color: var(--texto); padding: 6px 10px; border-radius: 6px;
+    font-size: 0.76rem; pointer-events: none; z-index: 200; display: none;
+    line-height: 1.6; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🍇 GESTIÓN DE PODAS</h1>
+    <span style="font-size:0.75rem;color:var(--texto-dim)">Temporada 2025–2026 · 301 líneos totales</span>
+  </div>
+  <div class="header-right">
+    <select class="podador-select" id="podadorSelect">
+      <option value="Podador 1">👤 Podador 1</option>
+      <option value="Podador 2">👤 Podador 2</option>
+      <option value="Podador 3">👤 Podador 3</option>
+      <option value="Podador 4">👤 Podador 4</option>
+      <option value="Podador 5">👤 Podador 5</option>
+    </select>
+    <button class="btn btn-reset" onclick="resetAll()">↺ Reiniciar</button>
+    <button class="btn btn-export" onclick="exportarResumen()">⬇ Exportar</button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <h2>📊 Progreso total</h2>
+    <div class="progreso-total">
+      <div class="big-num" id="numHechos">0<span>/301</span></div>
+      <div class="pct-label">líneos podados</div>
+      <div class="prog-bar-wrap">
+        <div class="prog-bar-fill" id="progBar" style="width:0%"></div>
+      </div>
+      <div class="prog-sub">
+        <span id="pendLabel">301 pendientes</span>
+        <span id="pctLabel">0%</span>
+      </div>
+    </div>
+
+    <div class="inc-count">
+      <div class="n" id="numInc">0</div>
+      <div class="l">Incidencias</div>
+    </div>
+
+    <h2>🗺 Leyenda</h2>
+    <div class="leyenda">
+      <div class="leyenda-item"><div class="dot dot-p"></div>Pendiente</div>
+      <div class="leyenda-item"><div class="dot dot-h"></div>Terminado</div>
+      <div class="leyenda-item"><div class="dot dot-al"></div>Alambre roto</div>
+      <div class="leyenda-item"><div class="dot dot-te"></div>Tensor a cambiar</div>
+      <div class="leyenda-item"><div class="dot dot-ot"></div>Otra incidencia</div>
+    </div>
+
+    <h2>⚠️ Incidencias</h2>
+    <div class="incidencias-list" id="incList">
+      <div style="font-size:0.75rem;color:var(--texto-dim);text-align:center;padding:8px">Sin incidencias</div>
+    </div>
+  </aside>
+
+  <div class="mapa-wrap">
+    <div class="mapa-toolbar">
+      <span>Herramienta:</span>
+      <button class="tool-btn active" id="toolMarcar" onclick="setTool('marcar')">✅ Marcar poda</button>
+      <button class="tool-btn inc-tool" id="toolInc" onclick="setTool('incidencia')">⚠️ Añadir incidencia</button>
+      <span style="color:#3d5c3f;margin:0 4px">|</span>
+      <span style="font-size:0.75rem;color:#3d6644">Clic = marcar hecho · Clic en hecho = desmarcar</span>
+    </div>
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="vinaCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal">
+    <h3>⚠️ Nueva Incidencia</h3>
+    <div>
+      <label>Tipo</label>
+      <select id="incTipo">
+        <option value="alambre">🔴 Alambre roto</option>
+        <option value="tensor">🟣 Tensor a cambiar</option>
+        <option value="otro">⚪ Otra incidencia</option>
+      </select>
+    </div>
+    <div>
+      <label>Notas (opcional)</label>
+      <textarea id="incNota" placeholder="Describe el problema..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarIncidencia()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+//  DISEÑO DEL MAPA
+//  
+//  El canvas se divide en 3 zonas SIN solapamiento.
+//  Disposición basada en la imagen real:
+//
+//   ┌──────────────┬──────────────────────────────────┐
+//   │  ZONA ROJA   │                                  │
+//   │   33 líneos  │        ZONA AZUL                 │
+//   ├──────────────┤       150 líneos                 │
+//   │              │                                  │
+//   │  ZONA VERDE  │                                  │
+//   │  118 líneos  │                                  │
+//   │              │                                  │
+//   └──────────────┴──────────────────────────────────┘
+//
+//  Cada zona ocupa su propio rectángulo — sin solapamiento posible.
+//  Los líneos son horizontales con separación mínima garantizada.
+// ══════════════════════════════════════════════════════════════════════
+
+const W = 920, H = 680;
+const canvas = document.getElementById('vinaCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = W; canvas.height = H;
+
+const TOTAL = 301;
+
+// ── Definición de zonas (píxeles absolutos, sin solapamiento) ──────────
+// Layout:
+//   Roja:  col izq, fila superior     x:[20..390], y:[20..200]
+//   Verde: col izq, fila inferior     x:[20..390], y:[215..660]
+//   Azul:  col der, toda la altura    x:[410..900], y:[20..660]
+//
+// Separación entre zonas: 15px de margen
+
+const ZONAS = {
+  R: {
+    label: 'Zona Roja', total: 33,
+    zoneColor: '#e63946',
+    // Área del polígono decorativo
+    bx: 20, by: 20, bw: 370, bh: 178,
+    // Área donde van los líneos (interior con padding)
+    lx1: 30, lx2: 382, ly1: 34, ly2: 192,
+  },
+  G: {
+    label: 'Zona Verde', total: 118,
+    zoneColor: '#52b788',
+    bx: 20, by: 210, bw: 370, bh: 450,
+    lx1: 30, lx2: 382, ly1: 226, ly2: 652,
+  },
+  B: {
+    label: 'Zona Azul', total: 150,
+    zoneColor: '#4895ef',
+    bx: 405, by: 20, bw: 495, bh: 640,
+    lx1: 418, lx2: 892, ly1: 36, ly2: 652,
+  }
+};
+
+// ── Estado ────────────────────────────────────────────────────────────
+let lineos = {};
+let incidencias = [];
+let tool = 'marcar';
+let pendingKey = null;
+
+// ── Inicializar líneos ─────────────────────────────────────────────────
+function initLineos() {
+  lineos = {};
+  for (const [zid, z] of Object.entries(ZONAS)) {
+    const n = z.total;
+    // Espacio disponible en Y
+    const spanY = z.ly2 - z.ly1;
+    // Separación mínima entre líneos (para evitar missclick): al menos 4px
+    const gap = spanY / (n - 1 || 1);
+    for (let i = 0; i < n; i++) {
+      const key = `${zid}_${i}`;
+      const y = z.ly1 + i * gap;
+      lineos[key] = {
+        key, zona: zid, num: i + 1,
+        x1: z.lx1, y: y, x2: z.lx2,
+        estado: 'pendiente',
+        incidencias: [],
+        podador: null, fecha: null
+      };
+    }
+  }
+}
+
+// ── Color de un líneo ─────────────────────────────────────────────────
+function lineColor(l) {
+  if (l.incidencias.length > 0) {
+    const t = l.incidencias[0].tipo;
+    return t === 'alambre' ? '#f4a261' : t === 'tensor' ? '#9b5de5' : '#adb5bd';
+  }
+  return l.estado === 'hecho' ? '#52b788' : '#e63946';
+}
+
+// ── Dibujo ────────────────────────────────────────────────────────────
+function drawBg() {
+  // Fondo general
+  ctx.fillStyle = '#0f2414';
+  ctx.fillRect(0, 0, W, H);
+
+  // Textura olivar (zona exterior — fuera de los recuadros de viña)
+  ctx.fillStyle = '#0b1a0d';
+  for (let ox = 0; ox < W; ox += 30) {
+    for (let oy = 0; oy < H; oy += 30) {
+      const jx = Math.sin(ox * 7.3 + oy * 1.1) * 8;
+      const jy = Math.cos(oy * 5.7 + ox * 1.3) * 8;
+      const px2 = ox + jx, py2 = oy + jy;
+      // No dibujar dentro de las zonas de viña
+      let inZone = false;
+      for (const z of Object.values(ZONAS)) {
+        if (px2 > z.bx && px2 < z.bx + z.bw && py2 > z.by && py2 < z.by + z.bh) { inZone = true; break; }
+      }
+      if (!inZone) {
+        ctx.beginPath(); ctx.arc(px2, py2, 9, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+}
+
+function drawZonaBox(z) {
+  // Relleno zona viña
+  ctx.fillStyle = '#152e18';
+  ctx.beginPath();
+  ctx.roundRect(z.bx, z.by, z.bw, z.bh, 6);
+  ctx.fill();
+
+  // Borde coloreado
+  ctx.strokeStyle = z.zoneColor + '66';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 5]);
+  ctx.beginPath();
+  ctx.roundRect(z.bx, z.by, z.bw, z.bh, 6);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawEtiqueta(zid, z) {
+  const hechos = Object.values(lineos).filter(l => l.zona === zid && l.estado === 'hecho').length;
+  const pct = Math.round(hechos / z.total * 100);
+  ctx.fillStyle = z.zoneColor;
+  ctx.font = 'bold 10px DM Sans';
+  ctx.textAlign = 'left';
+  ctx.fillText(`${z.label}  ·  ${hechos}/${z.total}  (${pct}%)`, z.bx + 8, z.by + 13);
+}
+
+function drawLineos() {
+  const vals = Object.values(lineos);
+  // Calcular separación mínima por zona para ajustar grosor de hit
+  for (const l of vals) {
+    const col = lineColor(l);
+    const x1 = l.x1, y = l.y, x2 = l.x2;
+
+    // Línea hecha: más visible
+    if (l.estado === 'hecho') {
+      ctx.save();
+      ctx.shadowColor = '#52b788';
+      ctx.shadowBlur = 4;
+      ctx.strokeStyle = '#52b788';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.2;
+      ctx.shadowBlur = 0;
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+    }
+
+    // Icono de incidencia
+    if (l.incidencias.length > 0) {
+      const mx = x1 + (x2 - x1) * 0.5;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(mx, y, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 6px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('!', mx, y + 2.5);
+    }
+  }
+
+  // Numeración cada 10 (y el 1)
+  for (const l of vals) {
+    if (l.num % 10 !== 0 && l.num !== 1) continue;
+    ctx.fillStyle = 'rgba(180,230,190,0.5)';
+    ctx.font = '8px DM Sans';
+    ctx.textAlign = 'right';
+    ctx.fillText(l.num, l.x1 - 3, l.y + 3);
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawBg();
+  for (const [zid, z] of Object.entries(ZONAS)) {
+    drawZonaBox(z);
+    drawEtiqueta(zid, z);
+  }
+  drawLineos();
+  updateStats();
+}
+
+// ── Hit test ──────────────────────────────────────────────────────────
+// Calcula la separación real entre líneos de cada zona para usar como radio
+let hitRadius = {};
+function calcHitRadius() {
+  for (const [zid, z] of Object.entries(ZONAS)) {
+    const n = z.total;
+    const gap = (z.ly2 - z.ly1) / (n - 1 || 1);
+    hitRadius[zid] = Math.min(gap / 2, 10); // máximo 10px de radio
+  }
+}
+
+function getLineoAt(mx, my) {
+  let best = null, bestDist = Infinity;
+  for (const l of Object.values(lineos)) {
+    // Solo si el click está dentro del bounding box de la zona + margen
+    const z = ZONAS[l.zona];
+    if (mx < z.lx1 - 5 || mx > z.lx2 + 5) continue;
+    if (my < z.by || my > z.by + z.bh) continue;
+    const d = Math.abs(my - l.y);
+    const r = hitRadius[l.zona] || 8;
+    if (d <= r && d < bestDist) { bestDist = d; best = l; }
+  }
+  return best;
+}
+
+// ── Eventos canvas ────────────────────────────────────────────────────
+canvas.addEventListener('click', e => {
+  const r = canvas.getBoundingClientRect();
+  const sx = canvas.width / r.width, sy = canvas.height / r.height;
+  const mx = (e.clientX - r.left) * sx, my = (e.clientY - r.top) * sy;
+  const l = getLineoAt(mx, my);
+  if (!l) return;
+
+  if (tool === 'marcar') {
+    l.estado = l.estado === 'hecho' ? 'pendiente' : 'hecho';
+    if (l.estado === 'hecho') {
+      l.podador = document.getElementById('podadorSelect').value;
+      l.fecha = new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+    } else { l.podador = null; l.fecha = null; }
+    saveState(); draw();
+  } else {
+    pendingKey = l.key;
+    document.getElementById('modalOverlay').classList.remove('hidden');
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  const r = canvas.getBoundingClientRect();
+  const sx = canvas.width / r.width, sy = canvas.height / r.height;
+  const mx = (e.clientX - r.left) * sx, my = (e.clientY - r.top) * sy;
+  const l = getLineoAt(mx, my);
+  const tip = document.getElementById('tooltip');
+
+  if (l) {
+    canvas.style.cursor = 'pointer';
+    const z = ZONAS[l.zona];
+    let html = `<strong>${z.label} · Líneo ${l.num}</strong><br>`;
+    html += l.estado === 'hecho'
+      ? `✅ Hecho${l.podador ? ' · 👤 ' + l.podador + ' ' + l.fecha : ''}`
+      : '🔴 Pendiente';
+    if (l.incidencias.length) html += `<br>⚠️ ${l.incidencias.length} incidencia(s)`;
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    tip.style.left = (e.clientX + 14) + 'px';
+    tip.style.top  = (e.clientY - 10) + 'px';
+  } else {
+    canvas.style.cursor = 'default';
+    tip.style.display = 'none';
+  }
+});
+canvas.addEventListener('mouseleave', () => {
+  document.getElementById('tooltip').style.display = 'none';
+});
+
+// ── Modal ─────────────────────────────────────────────────────────────
+function cerrarModal() {
+  document.getElementById('modalOverlay').classList.add('hidden');
+  pendingKey = null;
+}
+
+function confirmarIncidencia() {
+  if (!pendingKey) return;
+  const tipo = document.getElementById('incTipo').value;
+  const nota = document.getElementById('incNota').value.trim();
+  const podador = document.getElementById('podadorSelect').value;
+  const l = lineos[pendingKey];
+  const inc = {
+    id: Date.now(), lineoKey: pendingKey,
+    zona: l.zona, lineoNum: l.num, tipo, nota, podador,
+    fecha: new Date().toLocaleDateString('es-ES') + ' ' +
+           new Date().toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })
+  };
+  l.incidencias.push(inc);
+  incidencias.push(inc);
+  document.getElementById('incNota').value = '';
+  cerrarModal(); saveState(); draw(); renderInc();
+}
+
+// ── Lista incidencias ─────────────────────────────────────────────────
+function renderInc() {
+  const el = document.getElementById('incList');
+  if (!incidencias.length) {
+    el.innerHTML = '<div style="font-size:0.75rem;color:var(--texto-dim);text-align:center;padding:8px">Sin incidencias</div>';
+    return;
+  }
+  const lab = { alambre:'🔴 Alambre', tensor:'🟣 Tensor', otro:'⚪ Otro' };
+  el.innerHTML = incidencias.map(inc => `
+    <div class="inc-item">
+      <div class="inc-top">
+        <span class="inc-num">${ZONAS[inc.zona].label.replace('Zona ','')} L${inc.lineoNum}</span>
+        <span class="inc-type ${inc.tipo}">${lab[inc.tipo]}</span>
+        <button class="inc-del-btn" onclick="eliminarInc(${inc.id})">✕</button>
+      </div>
+      ${inc.nota ? `<div class="inc-nota">"${inc.nota}"</div>` : ''}
+      <div class="inc-podador">${inc.podador} · ${inc.fecha}</div>
+    </div>`).join('');
+}
+
+function eliminarInc(id) {
+  const inc = incidencias.find(i => i.id === id);
+  if (!inc) return;
+  incidencias = incidencias.filter(i => i.id !== id);
+  const l = lineos[inc.lineoKey];
+  if (l) l.incidencias = l.incidencias.filter(i => i.id !== id);
+  saveState(); draw(); renderInc();
+}
+
+// ── Stats (TOTALES, sin separar por zona) ─────────────────────────────
+function updateStats() {
+  const hechos = Object.values(lineos).filter(l => l.estado === 'hecho').length;
+  const pend = TOTAL - hechos;
+  const pct = Math.round(hechos / TOTAL * 100);
+  document.getElementById('numHechos').innerHTML = `${hechos}<span>/${TOTAL}</span>`;
+  document.getElementById('progBar').style.width = pct + '%';
+  document.getElementById('pendLabel').textContent = `${pend} pendientes`;
+  document.getElementById('pctLabel').textContent = pct + '%';
+  document.getElementById('numInc').textContent = incidencias.length;
+  renderInc();
+}
+
+// ── Herramienta ───────────────────────────────────────────────────────
+function setTool(t) {
+  tool = t;
+  document.getElementById('toolMarcar').classList.toggle('active', t === 'marcar');
+  document.getElementById('toolInc').classList.toggle('active', t === 'incidencia');
+}
+
+// ── Reset / Export ────────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('¿Reiniciar todo el progreso?')) return;
+  initLineos(); incidencias = []; saveState(); draw();
+}
+
+function exportarResumen() {
+  const hechos = Object.values(lineos).filter(l => l.estado === 'hecho');
+  const pend   = Object.values(lineos).filter(l => l.estado === 'pendiente');
+  const pct = Math.round(hechos.length / TOTAL * 100);
+  let txt = `=== RESUMEN DE PODAS ===\nFecha: ${new Date().toLocaleDateString('es-ES')}\n`;
+  txt += `Progreso: ${hechos.length}/${TOTAL} (${pct}%)\n\n`;
+
+  for (const [zid, z] of Object.entries(ZONAS)) {
+    const zh = hechos.filter(l => l.zona === zid);
+    const zp = pend.filter(l => l.zona === zid);
+    txt += `── ${z.label} (${z.total} líneos) ──\n`;
+    txt += `  Hechos (${zh.length}): ${zh.map(l=>'L'+l.num+(l.podador?' ['+l.podador+']':'')).join(', ') || '—'}\n`;
+    txt += `  Pendientes (${zp.length}): ${zp.map(l=>'L'+l.num).join(', ') || '—'}\n\n`;
+  }
+
+  txt += `── Incidencias (${incidencias.length}) ──\n`;
+  incidencias.forEach(inc =>
+    txt += `  ${ZONAS[inc.zona].label} · L${inc.lineoNum}: ${inc.tipo}${inc.nota?' — '+inc.nota:''} [${inc.podador}] ${inc.fecha}\n`
+  );
+
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' }));
+  a.download = `podas_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+}
+
+// ── Persistencia ──────────────────────────────────────────────────────
+function saveState() {
+  try {
+    localStorage.setItem('vina_v4', JSON.stringify({
+      lineos: Object.fromEntries(Object.entries(lineos).map(([k,l]) =>
+        [k, { estado:l.estado, podador:l.podador, fecha:l.fecha, incidencias:l.incidencias }])),
+      incidencias
+    }));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('vina_v4');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    for (const [k, s] of Object.entries(data.lineos || {})) {
+      if (lineos[k]) {
+        lineos[k].estado = s.estado;
+        lineos[k].podador = s.podador;
+        lineos[k].fecha = s.fecha;
+        lineos[k].incidencias = s.incidencias || [];
+      }
+    }
+    incidencias = data.incidencias || [];
+  } catch(e) {}
+}
+
+// ── Responsive ────────────────────────────────────────────────────────
+function resizeCanvas() {
+  const c = document.getElementById('canvasContainer');
+  const maxW = c.clientWidth - 40;
+  if (maxW < W) {
+    const s = maxW / W;
+    canvas.style.width  = (W * s) + 'px';
+    canvas.style.height = (H * s) + 'px';
+  } else {
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+  }
+}
+window.addEventListener('resize', resizeCanvas);
+
+// ── Arranque ──────────────────────────────────────────────────────────
+initLineos();
+calcHitRadius();
+loadState();
+draw();
+resizeCanvas();
+</script>
+</body>
+</html>
