@@ -120,6 +120,7 @@
       <option value="Podador 5">👤 Podador 5</option>
     </select>
     <div class="header-right">
+      <span id="syncStatus" style="font-size:0.7rem;color:var(--texto-dim);white-space:nowrap"></span>
       <button class="btn btn-reset" onclick="resetAll()">↺ Reiniciar</button>
       <button class="btn btn-export" onclick="exportarResumen()">⬇ Exportar</button>
     </div>
@@ -612,7 +613,7 @@ function setTool(t) {
 
 // ── Reset / Export ───────────────────────────────────────────────
 function resetAll() {
-  if (!confirm('¿Reiniciar todo el progreso?')) return;
+  if (!confirm('¿Reiniciar todo el progreso? Esto afectará a todos los dispositivos.')) return;
   initLineos(); incidencias=[]; saveState(); draw();
 }
 function exportarResumen() {
@@ -640,31 +641,88 @@ function showToast(msg) {
   toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-// ── Persistencia ─────────────────────────────────────────────────
-function saveState() {
+// ── Firebase Realtime Database ────────────────────────────────────
+const FB_URL = 'https://uva-de-vida-38a5d-default-rtdb.europe-west1.firebasedatabase.app/podas.json';
+
+// Guarda el estado completo en Firebase
+async function saveState() {
+  const data = {
+    lineos: Object.fromEntries(Object.entries(lineos).map(([k,l]) =>
+      [k, { estado:l.estado, podador:l.podador, fecha:l.fecha, incidencias:l.incidencias }])),
+    incidencias
+  };
   try {
-    localStorage.setItem('vina_v6', JSON.stringify({
-      lineos:Object.fromEntries(Object.entries(lineos).map(([k,l])=>
-        [k,{estado:l.estado,podador:l.podador,fecha:l.fecha,incidencias:l.incidencias}])),
-      incidencias
-    }));
+    await fetch(FB_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch(e) { showToast('⚠️ Sin conexión — cambio guardado localmente'); }
+  // También guardar local como respaldo offline
+  try { localStorage.setItem('vina_backup', JSON.stringify(data)); } catch(e){}
+}
+
+// Carga el estado desde Firebase al arrancar
+async function loadState() {
+  setStatus('Conectando...');
+  try {
+    const res = await fetch(FB_URL);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (data && data.lineos) {
+      for (const [k,s] of Object.entries(data.lineos))
+        if (lineos[k]){ lineos[k].estado=s.estado; lineos[k].podador=s.podador; lineos[k].fecha=s.fecha; lineos[k].incidencias=s.incidencias||[]; }
+      incidencias = data.incidencias || [];
+    }
+    setStatus('');
+  } catch(e) {
+    // Fallback a copia local
+    try {
+      const raw = localStorage.getItem('vina_backup'); if(!raw) return;
+      const data = JSON.parse(raw);
+      for (const [k,s] of Object.entries(data.lineos||{}))
+        if (lineos[k]){ lineos[k].estado=s.estado; lineos[k].podador=s.podador; lineos[k].fecha=s.fecha; lineos[k].incidencias=s.incidencias||[]; }
+      incidencias = data.incidencias||[];
+    } catch(e2){}
+    setStatus('Sin conexión');
+  }
+}
+
+// Escucha cambios en tiempo real (polling cada 8 segundos)
+let lastHash = '';
+async function syncLoop() {
+  try {
+    const res = await fetch(FB_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const hash = JSON.stringify(data);
+    if (hash !== lastHash && lastHash !== '') {
+      // Hay cambios de otro dispositivo — aplicar
+      if (data && data.lineos) {
+        for (const [k,s] of Object.entries(data.lineos))
+          if (lineos[k]){ lineos[k].estado=s.estado; lineos[k].podador=s.podador; lineos[k].fecha=s.fecha; lineos[k].incidencias=s.incidencias||[]; }
+        incidencias = data.incidencias || [];
+        draw();
+      }
+    }
+    lastHash = hash;
   } catch(e){}
 }
-function loadState() {
-  try {
-    const raw=localStorage.getItem('vina_v6'); if(!raw) return;
-    const data=JSON.parse(raw);
-    for (const [k,s] of Object.entries(data.lineos||{}))
-      if (lineos[k]){ lineos[k].estado=s.estado; lineos[k].podador=s.podador; lineos[k].fecha=s.fecha; lineos[k].incidencias=s.incidencias||[]; }
-    incidencias=data.incidencias||[];
-  } catch(e){}
+
+function setStatus(msg) {
+  const el = document.getElementById('syncStatus');
+  if (el) el.textContent = msg;
 }
 
 // ── Arranque ─────────────────────────────────────────────────────
 initLineos();
 calcHitRadius();
-loadState();
-draw();
+draw(); // dibujar vacío primero
+loadState().then(() => {
+  draw();
+  lastHash = JSON.stringify({ lineos: Object.fromEntries(Object.entries(lineos).map(([k,l])=>[k,{estado:l.estado,podador:l.podador,fecha:l.fecha,incidencias:l.incidencias}])), incidencias });
+  setInterval(syncLoop, 8000); // sincronizar cada 8 segundos
+});
 setTimeout(resetZoom, 60);
 </script>
 </body>
