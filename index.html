@@ -148,10 +148,113 @@
   .pod-bar-fill { height:100%; background:linear-gradient(90deg,var(--verde),var(--verde-claro)); border-radius:10px; transition:width 0.5s; }
   .pod-pct { font-size:0.7rem; color:var(--texto-dim); min-width:32px; text-align:right; }
 
-  @media(min-width:768px){ .modal-overlay{align-items:center;} .modal{border-radius:12px;max-width:360px;padding-bottom:20px;} .modal-handle{display:none;} }
+  /* PANTALLA BIENVENIDA */
+  #welcomeScreen {
+    position:fixed; inset:0; background:var(--fondo); z-index:999;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:32px; padding:32px;
+  }
+  #welcomeScreen h2 {
+    font-family:'Bebas Neue',sans-serif; font-size:2.4rem; letter-spacing:4px;
+    color:var(--verde-claro); text-align:center;
+  }
+  #welcomeScreen p {
+    font-size:1rem; color:var(--texto-dim); text-align:center; margin-top:-20px;
+  }
+  .welcome-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; max-width:380px;
+  }
+  .welcome-btn {
+    background:var(--panel); border:2px solid var(--borde); color:var(--texto);
+    border-radius:14px; padding:22px 12px; font-family:'DM Sans',sans-serif;
+    font-size:1.05rem; font-weight:600; cursor:pointer; text-align:center;
+    transition:all 0.15s; display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .welcome-btn:active { background:var(--verde); border-color:var(--verde-claro); color:white; transform:scale(0.97); }
+  .welcome-btn .w-icon { font-size:1.8rem; }
+
+  /* MENU ACCION LINEO */
+  #actionMenu {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300;
+    display:flex; align-items:flex-end; justify-content:center;
+    backdrop-filter:blur(3px);
+  }
+  #actionMenu.hidden { display:none; }
+  .action-sheet {
+    background:var(--panel); border:1px solid var(--borde);
+    border-radius:20px 20px 0 0; width:100%; max-width:500px;
+    padding:20px 20px 36px; display:flex; flex-direction:column; gap:10px;
+  }
+  .action-sheet-handle { width:40px; height:4px; background:var(--borde); border-radius:2px; margin:0 auto 8px; }
+  .action-sheet-title {
+    font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:2px;
+    color:var(--verde-claro); text-align:center; margin-bottom:4px;
+  }
+  .action-sheet-subtitle {
+    font-size:0.78rem; color:var(--texto-dim); text-align:center; margin-top:-6px; margin-bottom:6px;
+  }
+  .action-main-btn {
+    background:var(--verde); color:white; border:none; border-radius:12px;
+    padding:16px; font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+    transition:background 0.15s;
+  }
+  .action-main-btn.desmarcar { background:#2a1a1a; border:1px solid var(--rojo); color:var(--rojo-claro); }
+  .action-main-btn:active { filter:brightness(0.85); }
+  .action-inc-label {
+    font-size:0.75rem; color:var(--texto-dim); text-align:center;
+    margin-top:4px; margin-bottom:2px; text-transform:uppercase; letter-spacing:1px;
+  }
+  .action-inc-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  .action-inc-btn {
+    border:1px solid var(--borde); background:var(--fondo); color:var(--texto);
+    border-radius:10px; padding:12px 8px; font-family:'DM Sans',sans-serif;
+    font-size:0.85rem; font-weight:600; cursor:pointer; text-align:center;
+    display:flex; align-items:center; gap:6px; justify-content:center;
+    transition:background 0.1s;
+  }
+  .action-inc-btn:active { filter:brightness(1.3); }
+  .action-cancel {
+    background:none; border:1px solid var(--borde); color:var(--texto-dim);
+    border-radius:10px; padding:12px; font-family:'DM Sans',sans-serif;
+    font-size:0.9rem; cursor:pointer; margin-top:2px;
+  }
 </style>
 </head>
 <body>
+
+<!-- PANTALLA BIENVENIDA -->
+<div id="welcomeScreen">
+  <h2>🍇 PODAS</h2>
+  <p>¿Quién eres?</p>
+  <div class="welcome-grid" id="welcomeGrid"></div>
+</div>
+
+<!-- MENU ACCION LINEO -->
+<div id="actionMenu" class="hidden">
+  <div class="action-sheet">
+    <div class="action-sheet-handle"></div>
+    <div class="action-sheet-title" id="actionTitle">Líneo 0</div>
+    <div class="action-sheet-subtitle" id="actionSubtitle"></div>
+    <button class="action-main-btn" id="actionPodaBtn" onclick="accionPodar()"></button>
+    <div class="action-inc-label">Registrar incidencia</div>
+    <div class="action-inc-grid">
+      <button class="action-inc-btn" style="border-color:#e63946;color:#e63946" onclick="accionIncidencia('alambre')">🔴 Alambre roto</button>
+      <button class="action-inc-btn" style="border-color:#ffd166;color:#ffd166" onclick="accionIncidencia('extensor')">🟡 Cambiar extensor</button>
+      <button class="action-inc-btn" style="border-color:#f4a261;color:#f4a261" onclick="accionIncidencia('poste')">🟠 Poste roto</button>
+      <button class="action-inc-btn" style="border-color:#c77dff;color:#c77dff" onclick="accionIncidencia('tensar')">🟣 Tensar alambre</button>
+      <button class="action-inc-btn" style="grid-column:span 2;border-color:#adb5bd;color:#adb5bd" onclick="mostrarOtro()">✏️ Otro</button>
+    </div>
+    <div id="otroBox" style="display:none;flex-direction:column;gap:8px;margin-top:4px">
+      <textarea id="otroTexto" placeholder="Describe la incidencia..." style="width:100%;background:var(--fondo);border:1px solid var(--borde);color:var(--texto);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;resize:none;height:80px"></textarea>
+      <button class="action-main-btn" onclick="accionIncidenciaOtro()">Guardar incidencia</button>
+    </div>
+    <button class="action-cancel" onclick="cerrarActionMenu()">Cancelar</button>
+  </div>
+</div>
+
 <div id="app">
 
   <header>
@@ -222,8 +325,6 @@
   </div>
 
   <div id="toolbar">
-    <button class="tool-btn active" id="toolMarcar" onclick="setTool('marcar')">✅ Marcar podado</button>
-    <button class="tool-btn inc-tool" id="toolInc"  onclick="setTool('incidencia')">🔴 Incidencia</button>
     <button class="zoom-btn" id="btnUndo" onclick="undo()" title="Deshacer" style="opacity:0.4" disabled>↩</button>
     <button class="zoom-btn" id="btnRedo" onclick="redo()" title="Rehacer"  style="opacity:0.4" disabled>↪</button>
     <div class="zoom-btns">
@@ -359,7 +460,49 @@ function calcHitRadius() {
   }
 }
 
-// -- Hit test ------------------------------------------------------
+// -- Animaciones ---------------------------------------------------
+let animations = {}; // key -> { startTime, x1, x2, y }
+let animFrame  = null;
+
+function triggerAnim(l) {
+  animations[l.key] = { startTime: performance.now(), x1: l.x1, x2: l.x2, y: l.y };
+  if (!animFrame) animLoop();
+}
+
+function animLoop() {
+  const now  = performance.now();
+  const dur  = 750; // ms
+  let active = false;
+  for (const [key, a] of Object.entries(animations)) {
+    if (now - a.startTime < dur) { active = true; break; }
+    else delete animations[key];
+  }
+  draw();
+  if (active) animFrame = requestAnimationFrame(animLoop);
+  else animFrame = null;
+}
+
+function drawAnimations(now) {
+  const dur = 750;
+  for (const [key, a] of Object.entries(animations)) {
+    const t = Math.min((now - a.startTime) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const xEnd = a.x1 + (a.x2 - a.x1) * ease;
+    // Línea animada brillante
+    ctx.save();
+    ctx.shadowColor = '#52b788'; ctx.shadowBlur = 20;
+    ctx.strokeStyle = '#a8ffd4'; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(a.x1, a.y); ctx.lineTo(xEnd, a.y); ctx.stroke();
+    // Flash en el frente
+    if (t < 0.95) {
+      ctx.shadowBlur = 30;
+      ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(xEnd - 30, a.y); ctx.lineTo(xEnd, a.y); ctx.stroke();
+    }
+    ctx.restore();
+    if (t >= 1) delete animations[key];
+  }
+}
 function getLineoAt(cx, cy) {
   let best = null, bestDist = Infinity;
   for (const l of Object.values(lineos)) {
@@ -430,7 +573,7 @@ function draw() {
     ctx.fillText(l.num, x2+8, y + fs*0.35);
   }
 
-  const INC_COLORS = { alambre:'#e63946', extensor:'#ffd166', poste:'#f4a261', tensar:'#c77dff' };
+  const INC_COLORS = { alambre:'#e63946', extensor:'#ffd166', poste:'#f4a261', tensar:'#c77dff', otro:'#adb5bd' };
 
   for (const l of Object.values(lineos)) {
     for (const inc of l.incidencias) {
@@ -447,6 +590,7 @@ function draw() {
     }
   }
 
+  drawAnimations(performance.now());
   updateStats();
 }
 
@@ -462,8 +606,8 @@ function showLineoInfo(l, screenX, screenY) {
     html += `<br>⬜ Sin podar`;
   }
   if (l.incidencias.length > 0) {
-    const lab      = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre'};
-    const dotColor = {alambre:'🔴', extensor:'🟡', poste:'🟠', tensar:'🟣'};
+    const lab      = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre', otro:'Otro'};
+    const dotColor = {alambre:'🔴', extensor:'🟡', poste:'🟠', tensar:'🟣', otro:'⚪'};
     l.incidencias.forEach(inc => {
       html += `<br>${dotColor[inc.tipo]||'🔴'} ${lab[inc.tipo]||inc.tipo}${inc.nota ? ': '+inc.nota : ''}`;
     });
@@ -490,27 +634,111 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+// -- Pantalla bienvenida -------------------------------------------
+function initWelcome() {
+  const saved = localStorage.getItem('vina_podador');
+  if (saved && PODADORES.includes(saved)) {
+    document.getElementById('podadorSelect').value = saved;
+    document.getElementById('welcomeScreen').style.display = 'none';
+    return;
+  }
+  const grid = document.getElementById('welcomeGrid');
+  const icons = ['👩','👨','👩','👨','👦','👩'];
+  grid.innerHTML = PODADORES.map((p,i) => `
+    <button class="welcome-btn" onclick="elegirPodador('${p}')">
+      <span class="w-icon">${icons[i]}</span>${p}
+    </button>`).join('');
+}
+
+function elegirPodador(nombre) {
+  document.getElementById('podadorSelect').value = nombre;
+  localStorage.setItem('vina_podador', nombre);
+  document.getElementById('welcomeScreen').style.display = 'none';
+}
+
+// -- Menu accion lineo ---------------------------------------------
+let actionLineoKey = null;
+let actionClickCX = null, actionClickCY = null;
+
+function abrirActionMenu(l, cx, cy) {
+  actionLineoKey = l.key;
+  actionClickCX  = cx;
+  actionClickCY  = cy;
+  const zona = ZONAS[l.zona].label;
+  document.getElementById('actionTitle').textContent = `${zona} - Líneo ${l.num}`;
+  const podaBtn = document.getElementById('actionPodaBtn');
+  if (l.estado === 'hecho') {
+    podaBtn.textContent = '✕  Desmarcar como podado';
+    podaBtn.className = 'action-main-btn desmarcar';
+  } else {
+    podaBtn.textContent = '✔  Marcar como podado';
+    podaBtn.className = 'action-main-btn';
+  }
+  const sub = l.incidencias.length > 0
+    ? `⚠️ ${l.incidencias.length} incidencia${l.incidencias.length>1?'s':''} registrada${l.incidencias.length>1?'s':''}`
+    : l.estado === 'hecho' ? `✅ Podado por ${l.podador}${l.fecha ? ' · ' + l.fecha : ''}` : '';
+  document.getElementById('actionSubtitle').textContent = sub;
+  document.getElementById('actionMenu').classList.remove('hidden');
+}
+
+function cerrarActionMenu() {
+  document.getElementById('actionMenu').classList.add('hidden');
+  document.getElementById('otroBox').style.display = 'none';
+  document.getElementById('otroTexto').value = '';
+  actionLineoKey = null;
+}
+
+function accionPodar() {
+  const l = lineos[actionLineoKey]; if (!l) return;
+  l.estado = l.estado === 'hecho' ? 'pendiente' : 'hecho';
+  if (l.estado === 'hecho') {
+    l.podador = document.getElementById('podadorSelect').value;
+    l.fecha   = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
+    showToast(`✅ ${ZONAS[l.zona].label} · Líneo ${l.num} — Podado`);
+    triggerAnim(l);
+  } else {
+    l.podador = null; l.fecha = null;
+    showToast(`⬜ ${ZONAS[l.zona].label} · Líneo ${l.num} — Desmarcado`);
+  }
+  cerrarActionMenu();
+  saveState(); draw(); snapshot();
+}
+
+function mostrarOtro() {
+  const box = document.getElementById('otroBox');
+  box.style.display = 'flex';
+  document.getElementById('otroTexto').focus();
+}
+
+function accionIncidenciaOtro() {
+  const nota = document.getElementById('otroTexto').value.trim();
+  if (!nota) { document.getElementById('otroTexto').style.borderColor='#e63946'; return; }
+  accionIncidencia('otro', nota);
+}
+
+function accionIncidencia(tipo, nota='') {
+  const l = lineos[actionLineoKey]; if (!l) return;
+  const podador = document.getElementById('podadorSelect').value;
+  const inc = {
+    id: Date.now(), lineoKey: l.key,
+    zona: l.zona, lineoNum: l.num, tipo, nota, podador,
+    cx: actionClickCX !== null ? actionClickCX : l.x1 + (l.x2 - l.x1) * 0.5,
+    cy: l.y,
+    fecha: new Date().toLocaleDateString('es-ES')+' '+
+           new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})
+  };
+  l.incidencias.push(inc); incidencias.push(inc);
+  const labInc = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre', otro:'Otro'};
+  showToast(`⚠️ ${labInc[tipo]} en ${ZONAS[l.zona].label} · L${l.num}`);
+  cerrarActionMenu();
+  saveState(); draw(); snapshot();
+}
+
 // -- Click handler -------------------------------------------------
 function handleClick(cx, cy) {
   const l = getLineoAt(cx, cy);
   if (!l) return;
-  if (tool === 'marcar') {
-    l.estado = l.estado==='hecho' ? 'pendiente' : 'hecho';
-    if (l.estado === 'hecho') {
-      l.podador = document.getElementById('podadorSelect').value;
-      l.fecha   = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-      showToast(`✅ ${ZONAS[l.zona].label} · Líneo ${l.num} - Podado`);
-    } else {
-      l.podador = null; l.fecha = null;
-      showToast(`⬜ ${ZONAS[l.zona].label} · Líneo ${l.num} - Desmarcado`);
-    }
-    saveState(); draw(); snapshot();
-  } else {
-    pendingKey     = l.key;
-    pendingClickCX = cx;
-    pendingClickCY = cy;
-    document.getElementById('modalOverlay').classList.remove('hidden');
-  }
+  abrirActionMenu(l, cx, cy);
 }
 
 // -- Touch ---------------------------------------------------------
@@ -656,7 +884,7 @@ function renderInc() {
   if (!incidencias.length) {
     el.innerHTML='<div style="font-size:0.75rem;color:var(--texto-dim);padding:6px">Sin incidencias</div>'; return;
   }
-  const lab = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre'};
+  const lab = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre', otro:'Otro'};
   el.innerHTML = incidencias.map(inc => `
     <div class="inc-item">
       <div class="inc-top">
@@ -875,9 +1103,10 @@ draw();
 loadState().then(() => {
   draw();
   lastHash = JSON.stringify(buildSaveData());
-  snapshot(); // estado inicial
+  snapshot();
   setInterval(syncLoop, 8000);
 });
+initWelcome();
 setTimeout(resetZoom, 60);
 </script>
 </body>
