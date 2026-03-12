@@ -674,9 +674,13 @@ function abrirActionMenu(l, cx, cy) {
     podaBtn.textContent = '✔  Marcar como podado';
     podaBtn.className = 'action-main-btn';
   }
-  const sub = l.incidencias.length > 0
-    ? `⚠️ ${l.incidencias.length} incidencia${l.incidencias.length>1?'s':''} registrada${l.incidencias.length>1?'s':''}`
-    : l.estado === 'hecho' ? `✅ Podado por ${l.podador}${l.fecha ? ' · ' + l.fecha : ''}` : '';
+  const labInc = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre', otro:'Otro'};
+  let sub = '';
+  if (l.incidencias.length > 0) {
+    sub = '⚠️ ' + l.incidencias.map(i => labInc[i.tipo] || i.tipo).join(', ');
+  } else if (l.estado === 'hecho') {
+    sub = `✅ Podado por ${l.podador}${l.fecha ? ' · ' + l.fecha : ''}`;
+  }
   document.getElementById('actionSubtitle').textContent = sub;
   document.getElementById('actionMenu').classList.remove('hidden');
 }
