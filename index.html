@@ -240,16 +240,18 @@
     <div class="action-sheet-subtitle" id="actionSubtitle"></div>
     <button class="action-main-btn" id="actionPodaBtn" onclick="accionPodar()"></button>
     <div class="action-inc-label">Registrar incidencia</div>
-    <div class="action-inc-grid">
-      <button class="action-inc-btn" style="border-color:#e63946;color:#e63946" onclick="accionIncidencia('alambre')">🔴 Alambre roto</button>
-      <button class="action-inc-btn" style="border-color:#ffd166;color:#ffd166" onclick="accionIncidencia('extensor')">🟡 Cambiar extensor</button>
-      <button class="action-inc-btn" style="border-color:#f4a261;color:#f4a261" onclick="accionIncidencia('poste')">🟠 Poste roto</button>
-      <button class="action-inc-btn" style="border-color:#c77dff;color:#c77dff" onclick="accionIncidencia('tensar')">🟣 Tensar alambre</button>
-      <button class="action-inc-btn" style="grid-column:span 2;border-color:#adb5bd;color:#adb5bd" onclick="mostrarOtro()">✏️ Otro</button>
+    <div class="action-inc-grid" id="incGrid">
+      <button class="action-inc-btn" style="border-color:#e63946;color:#e63946" onclick="seleccionarTipo('alambre')">🔴 Alambre roto</button>
+      <button class="action-inc-btn" style="border-color:#ffd166;color:#ffd166" onclick="seleccionarTipo('extensor')">🟡 Cambiar extensor</button>
+      <button class="action-inc-btn" style="border-color:#f4a261;color:#f4a261" onclick="seleccionarTipo('poste')">🟠 Poste roto</button>
+      <button class="action-inc-btn" style="border-color:#c77dff;color:#c77dff" onclick="seleccionarTipo('tensar')">🟣 Tensar alambre</button>
+      <button class="action-inc-btn" style="grid-column:span 2;border-color:#adb5bd;color:#adb5bd" onclick="seleccionarTipo('otro')">✏️ Otro</button>
     </div>
     <div id="otroBox" style="display:none;flex-direction:column;gap:8px;margin-top:4px">
-      <textarea id="otroTexto" placeholder="Describe la incidencia..." style="width:100%;background:var(--fondo);border:1px solid var(--borde);color:var(--texto);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;resize:none;height:80px"></textarea>
-      <button class="action-main-btn" onclick="accionIncidenciaOtro()">Guardar incidencia</button>
+      <div id="incTipoLabel" style="font-size:0.8rem;color:var(--texto-dim);text-align:center"></div>
+      <textarea id="otroTexto" placeholder="Notas (opcional)..." style="width:100%;background:var(--fondo);border:1px solid var(--borde);color:var(--texto);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;resize:none;height:70px"></textarea>
+      <button class="action-main-btn" onclick="confirmarIncidencia()">Guardar incidencia</button>
+      <button class="action-cancel" onclick="volverTipos()" style="margin-top:0">← Volver</button>
     </div>
     <button class="action-cancel" onclick="cerrarActionMenu()">Cancelar</button>
   </div>
@@ -687,9 +689,11 @@ function abrirActionMenu(l, cx, cy) {
 
 function cerrarActionMenu() {
   document.getElementById('actionMenu').classList.add('hidden');
-  document.getElementById('otroBox').style.display = 'none';
-  document.getElementById('otroTexto').value = '';
-  actionLineoKey = null;
+  document.getElementById('otroBox').style.display  = 'none';
+  document.getElementById('incGrid').style.display  = 'grid';
+  document.getElementById('otroTexto').value        = '';
+  tipoSeleccionado = null;
+  actionLineoKey   = null;
 }
 
 function accionPodar() {
@@ -708,16 +712,32 @@ function accionPodar() {
   saveState(); draw(); snapshot();
 }
 
-function mostrarOtro() {
-  const box = document.getElementById('otroBox');
-  box.style.display = 'flex';
-  document.getElementById('otroTexto').focus();
+let tipoSeleccionado = null;
+const labInc = {alambre:'🔴 Alambre roto', extensor:'🟡 Cambiar extensor', poste:'🟠 Poste roto', tensar:'🟣 Tensar alambre', otro:'✏️ Otro'};
+
+function seleccionarTipo(tipo) {
+  tipoSeleccionado = tipo;
+  document.getElementById('incGrid').style.display   = 'none';
+  document.getElementById('otroBox').style.display   = 'flex';
+  document.getElementById('otroTexto').value         = '';
+  document.getElementById('otroTexto').style.borderColor = '';
+  document.getElementById('incTipoLabel').textContent = labInc[tipo] || tipo;
+  if (tipo === 'otro') document.getElementById('otroTexto').focus();
 }
 
-function accionIncidenciaOtro() {
+function volverTipos() {
+  document.getElementById('incGrid').style.display = 'grid';
+  document.getElementById('otroBox').style.display = 'none';
+  tipoSeleccionado = null;
+}
+
+function confirmarIncidencia() {
+  if (!tipoSeleccionado) return;
   const nota = document.getElementById('otroTexto').value.trim();
-  if (!nota) { document.getElementById('otroTexto').style.borderColor='#e63946'; return; }
-  accionIncidencia('otro', nota);
+  if (tipoSeleccionado === 'otro' && !nota) {
+    document.getElementById('otroTexto').style.borderColor = '#e63946'; return;
+  }
+  accionIncidencia(tipoSeleccionado, nota);
 }
 
 function accionIncidencia(tipo, nota='') {
