@@ -341,30 +341,6 @@
   </div>
 </div>
 
-<div class="modal-overlay hidden" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <h3>🔴 Nueva Incidencia</h3>
-    <div>
-      <label>Tipo</label>
-      <select id="incTipo">
-        <option value="alambre">🔴 Alambre roto</option>
-        <option value="extensor">🟡 Cambiar extensor</option>
-        <option value="poste">🟠 Poste roto</option>
-        <option value="tensar">🟣 Tensar alambre</option>
-      </select>
-    </div>
-    <div>
-      <label>Notas (opcional)</label>
-      <textarea id="incNota" placeholder="Describe el problema..."></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn-confirm" onclick="confirmarIncidencia()">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <div id="toast"></div>
 <div id="lineoTooltip"></div>
 
@@ -399,11 +375,8 @@ const ZONAS = {
 // -- Estado --------------------------------------------------------
 let lineos      = {};
 let incidencias = [];
-let tool        = 'marcar';
-let pendingKey  = null;
 let hitRadius   = {};
 let modoClaro   = false;
-let pendingClickCX = 0, pendingClickCY = 0;
 let tipTimer    = null;
 let toastTimer  = null;
 let lastHash    = '';
@@ -877,31 +850,6 @@ wrap.addEventListener('wheel', e => {
   zoomBy(e.deltaY<0?0.2:-0.2, e.clientX-r.left, e.clientY-r.top);
 },{ passive:false });
 
-// -- Modal ---------------------------------------------------------
-function cerrarModal() {
-  document.getElementById('modalOverlay').classList.add('hidden');
-  pendingKey = null;
-}
-
-function confirmarIncidencia() {
-  if (!pendingKey) return;
-  const tipo    = document.getElementById('incTipo').value;
-  const nota    = document.getElementById('incNota').value.trim();
-  const podador = document.getElementById('podadorSelect').value;
-  const l = lineos[pendingKey];
-  const inc = {
-    id: Date.now(), lineoKey: pendingKey,
-    zona: l.zona, lineoNum: l.num, tipo, nota, podador,
-    cx: pendingClickCX, cy: pendingClickCY,
-    fecha: new Date().toLocaleDateString('es-ES')+' '+
-           new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})
-  };
-  l.incidencias.push(inc); incidencias.push(inc);
-  document.getElementById('incNota').value = '';
-  cerrarModal(); saveState(); draw(); snapshot();
-  showToast(`🔴 Incidencia en ${ZONAS[l.zona].label} · L${l.num}`);
-}
-
 // -- Lista incidencias ---------------------------------------------
 function renderInc() {
   const el = document.getElementById('incList');
@@ -1026,12 +974,6 @@ function redo() {
   updateUndoRedo();
   showToast('↪ Acción rehecha');
 }
-function setTool(t) {
-  tool = t;
-  document.getElementById('toolMarcar').classList.toggle('active', t==='marcar');
-  document.getElementById('toolInc').classList.toggle('active',    t==='incidencia');
-}
-
 // -- Modo claro / oscuro -------------------------------------------
 function toggleModo() {
   modoClaro = !modoClaro;
