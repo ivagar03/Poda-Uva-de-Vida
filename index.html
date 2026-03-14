@@ -221,9 +221,52 @@
     border-radius:10px; padding:12px; font-family:'DM Sans',sans-serif;
     font-size:0.9rem; cursor:pointer; margin-top:2px;
   }
+  /* GESTOR PODADORES */
+  #podadoresModal { position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:400; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+  #podadoresModal.hidden { display:none; }
+  #pinModal { display:flex; }
+  #pinModal.hidden { display:none; }
+  .pod-manager { background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:24px; width:90%; max-width:380px; display:flex; flex-direction:column; gap:14px; }
+  .pod-manager h3 { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:2px; color:var(--verde-claro); }
+  .pod-manager-list { display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto; }
+  .pod-manager-item { display:flex; align-items:center; justify-content:space-between; background:var(--fondo); border:1px solid var(--borde); border-radius:8px; padding:8px 12px; font-size:0.9rem; }
+  .pod-manager-item span { color:var(--texto); font-weight:600; }
+  .pod-del-btn { background:none; border:none; color:#e63946; font-size:1rem; cursor:pointer; padding:2px 6px; border-radius:4px; }
+  .pod-add-row { display:flex; gap:8px; }
+  .pod-add-input { flex:1; background:var(--fondo); border:1px solid var(--borde); color:var(--texto); border-radius:8px; padding:10px 12px; font-family:'DM Sans',sans-serif; font-size:0.95rem; }
+  .pod-add-btn { background:var(--verde); color:white; border:none; border-radius:8px; padding:10px 16px; font-family:'DM Sans',sans-serif; font-weight:700; cursor:pointer; }
 </style>
 </head>
 <body>
+
+<!-- MODAL PIN -->
+<div id="pinModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px);">
+  <div style="background:var(--panel);border:1px solid var(--borde);border-radius:16px;padding:28px 24px;width:90%;max-width:300px;display:flex;flex-direction:column;gap:14px;text-align:center;">
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:2px;color:var(--verde-claro);">🔒 PIN</div>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="····"
+      style="text-align:center;font-size:1.8rem;letter-spacing:8px;background:var(--fondo);border:1px solid var(--borde);color:var(--texto);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;width:100%;"
+      onkeydown="if(event.key==='Enter') confirmarPin()">
+    <div id="pinError" style="font-size:0.8rem;color:#e63946;min-height:1rem;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="cerrarPinModal()" style="flex:1;background:var(--fondo);border:1px solid var(--borde);color:var(--texto-dim);border-radius:8px;padding:10px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+      <button onclick="confirmarPin()" style="flex:2;background:var(--verde);color:white;border:none;border-radius:8px;padding:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GESTIÓN PODADORES -->
+<div id="podadoresModal" class="hidden">
+  <div class="pod-manager">
+    <h3>👥 Podadores</h3>
+    <div class="pod-manager-list" id="podManagerList"></div>
+    <div class="pod-add-row">
+      <input class="pod-add-input" id="podNuevoInput" placeholder="Nombre del podador..." maxlength="30"
+             onkeydown="if(event.key==='Enter') agregarPodador()">
+      <button class="pod-add-btn" onclick="agregarPodador()">＋ Añadir</button>
+    </div>
+    <button class="action-cancel" onclick="cerrarPodadoresModal()">Cerrar</button>
+  </div>
+</div>
 
 <!-- PANTALLA BIENVENIDA -->
 <div id="welcomeScreen">
@@ -272,7 +315,7 @@
     <div class="header-right">
       <span id="syncStatus" style="font-size:0.7rem;color:var(--texto-dim);white-space:nowrap"></span>
       <button class="btn" id="modoBtn" onclick="toggleModo()" style="background:var(--fondo);border:1px solid var(--borde);color:var(--texto);font-size:1rem;padding:5px 9px;">🌙</button>
-      <button class="btn btn-reset" onclick="resetAll()">↺ Reiniciar</button>
+      <button class="btn" onclick="abrirPodadoresModal()" style="background:var(--fondo);border:1px solid var(--borde);color:var(--texto);">👥</button>
       <button class="btn btn-export" onclick="exportarResumen()">⬇ Exportar</button>
     </div>
   </header>
@@ -283,7 +326,7 @@
     <button class="toggle-tab" id="tabLeyenda"     onclick="togglePanel('leyenda')">🗺 Leyenda</button>
     <button class="toggle-tab" id="tabIncidencias" onclick="togglePanel('incidencias')">⚠️ Incid.</button>
     <div class="mini-prog">
-      <strong id="miniHechos">0</strong><span style="color:#3d5c3f">/301</span>
+      <strong id="miniHechos">0</strong><span style="color:#3d5c3f">/287</span>
       <div class="mini-prog-bar"><div class="mini-prog-fill" id="miniBar" style="width:0%"></div></div>
       <span id="miniPct">0%</span>
     </div>
@@ -292,10 +335,10 @@
   <div id="panelContent">
     <div class="panel-inner" id="paneProgreso">
       <div class="prog-box">
-        <div class="big-num" id="numHechos">0<span>/301</span></div>
+        <div class="big-num" id="numHechos">0<span>/287</span></div>
         <div class="lbl">líneos podados</div>
         <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progBar" style="width:0%"></div></div>
-        <div class="prog-sub"><span id="pendLabel">301 pendientes</span><span id="pctLabel">0%</span></div>
+        <div class="prog-sub"><span id="pendLabel">287 pendientes</span><span id="pctLabel">0%</span></div>
       </div>
       <div class="inc-box"><div class="n" id="numInc">0</div><div class="l">Incidencias</div></div>
     </div>
@@ -318,7 +361,10 @@
     </div>
     <div class="panel-inner" id="paneIncidencias">
       <div class="inc-lista-panel">
-        <h3>⚠️ Incidencias registradas</h3>
+        <h3 style="display:flex;align-items:center;justify-content:space-between;">
+          ⚠️ Incidencias registradas
+          <button onclick="descargarIncidencias()" style="font-size:0.72rem;padding:4px 8px;background:var(--verde);color:white;border:none;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">⬇ Descargar</button>
+        </h3>
         <div class="inc-scroll" id="incList">
           <div style="font-size:0.75rem;color:var(--texto-dim);padding:6px">Sin incidencias</div>
         </div>
@@ -354,22 +400,25 @@ const canvas = document.getElementById('vinaCanvas');
 const ctx    = canvas.getContext('2d');
 canvas.width = W; canvas.height = H;
 
-const TOTAL = 301;
-const PODADORES = ['Carmen','Luis Padre','Andrea','Mario','Luis Hijo','Elena'];
+const TOTAL = 287;
+let PODADORES = ['Carmen','Luis Padre','Andrea','Mario','Luis Hijo','Elena'];
 const FB_URL = 'https://uva-de-vida-38a5d-default-rtdb.europe-west1.firebasedatabase.app/podas.json';
 
-// Todas las zonas con la misma anchura (1100px) y bien separadas
-// Canvas más alto → más espacio entre líneos
+// Zona Roja (22 líneos, 17-38) y Verde (117) en columna izquierda
+// Zona Amarilla (30, 1-30) encima de Azul (118, 1-118) en columna derecha
 const ZONAS = {
-  R: { label:'Zona Roja',  total:33,  zoneColor:'#e63946',
-       bx:30,    by:30,   bw:1100, bh:900,
-       lx1:200,  lx2:1070, ly1:90,  ly2:900 },
-  G: { label:'Zona Verde', total:118, zoneColor:'#52b788',
-       bx:30,    by:960,  bw:1100, bh:3180,
-       lx1:200,  lx2:1070, ly1:1020, ly2:4100 },
-  B: { label:'Zona Azul',  total:150, zoneColor:'#4895ef',
-       bx:1180,  by:30,   bw:1100, bh:4110,
-       lx1:1350, lx2:2220, ly1:90,  ly2:4100 }
+  R: { label:'Tempranillo Izq.', total:22,  zoneColor:'#e63946', numStart:17,
+       bx:30,   by:30,   bw:1100, bh:630,
+       lx1:200, lx2:1070, ly1:90,  ly2:610 },
+  G: { label:'Graciano Izq.',    total:117, zoneColor:'#52b788', numStart:1,
+       bx:30,   by:1070, bw:1100, bh:3080,
+       lx1:200, lx2:1070, ly1:1119, ly2:4100 },
+  Y: { label:'Tempranillo Der.', total:30,  zoneColor:'#f5c400', numStart:1,
+       bx:1180, by:30,   bw:1100, bh:1026,
+       lx1:1350,lx2:2220, ly1:288, ly2:1006 },
+  B: { label:'Graciano Der.',    total:118, zoneColor:'#4895ef', numStart:1,
+       bx:1180, by:1033, bw:1100, bh:3127,
+       lx1:1350,lx2:2220, ly1:1093,ly2:4100 }
 };
 
 // -- Estado --------------------------------------------------------
@@ -416,10 +465,9 @@ function initLineos() {
     const n   = z.total;
     const gap = n > 1 ? (z.ly2 - z.ly1) / (n - 1) : 0;
     for (let i = 0; i < n; i++) {
-      const key    = `${zid}_${i}`;
-      const offset = zid === 'R' ? 118 : 0;
-      lineos[key]  = {
-        key, zona: zid, num: offset + (n - i),
+      const key   = `${zid}_${i}`;
+      lineos[key] = {
+        key, zona: zid, num: z.numStart + (n - 1 - i),
         x1: z.lx1, y: z.ly1 + i*gap, x2: z.lx2,
         estado: 'pendiente', incidencias: [],
         podador: null, fecha: null
@@ -523,7 +571,7 @@ function draw() {
     const pct = Math.round(hechos/z.total*100);
     ctx.fillStyle = z.zoneColor;
     ctx.font = 'bold 32px DM Sans'; ctx.textAlign = 'left';
-    ctx.fillText(`${z.label}  ·  ${hechos}/${z.total}  (${pct}%)`, z.bx+24, z.by+44);
+    ctx.fillText(`${z.label}  ·  ${hechos}/${z.total}  (${pct}%)`, z.bx+24, z.by+34);
   }
 
   for (const l of Object.values(lineos)) {
@@ -609,20 +657,116 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// -- Pantalla bienvenida -------------------------------------------
+// -- Gestor podadores ----------------------------------------------
+function abrirPodadoresModal() {
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function cerrarPinModal() {
+  document.getElementById('pinModal').classList.add('hidden');
+}
+
+function confirmarPin() {
+  const pin = document.getElementById('pinInput').value.trim();
+  if (pin !== '1414') {
+    document.getElementById('pinError').textContent = 'PIN incorrecto';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+    return;
+  }
+  cerrarPinModal();
+  renderPodManagerList();
+  document.getElementById('podadoresModal').classList.remove('hidden');
+}
+
+function cerrarPodadoresModal() {
+  document.getElementById('podadoresModal').classList.add('hidden');
+  document.getElementById('podNuevoInput').value = '';
+}
+
+function renderPodManagerList() {
+  const el = document.getElementById('podManagerList');
+  if (!PODADORES.length) {
+    el.innerHTML = '<div style="font-size:0.8rem;color:var(--texto-dim);padding:6px">Sin podadores</div>';
+    return;
+  }
+  el.innerHTML = PODADORES.map(p => `
+    <div class="pod-manager-item">
+      <span>👤 ${p}</span>
+      <button class="pod-del-btn" onclick="eliminarPodador('${p.replace(/'/g,"\\'")}')">✕</button>
+    </div>`).join('');
+}
+
+function agregarPodador() {
+  const input = document.getElementById('podNuevoInput');
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  if (PODADORES.includes(nombre)) {
+    input.style.borderColor = '#e63946'; return;
+  }
+  PODADORES.push(nombre);
+  input.value = '';
+  input.style.borderColor = '';
+  guardarPodadores();
+  renderPodManagerList();
+  actualizarSelectPodador();
+  actualizarWelcome();
+}
+
+function eliminarPodador(nombre) {
+  if (PODADORES.length <= 1) { showToast('Debe haber al menos un podador'); return; }
+  if (!confirm(`¿Eliminar a ${nombre}?`)) return;
+  PODADORES = PODADORES.filter(p => p !== nombre);
+  // Si era el seleccionado, cambiar al primero
+  const sel = document.getElementById('podadorSelect');
+  if (sel.value === nombre) sel.value = PODADORES[0];
+  guardarPodadores();
+  renderPodManagerList();
+  actualizarSelectPodador();
+  actualizarWelcome();
+  renderPodadores();
+}
+
+function guardarPodadores() {
+  try { localStorage.setItem('vina_podadores', JSON.stringify(PODADORES)); } catch(e) {}
+}
+
+function cargarPodadores() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('vina_podadores'));
+    if (Array.isArray(saved) && saved.length) PODADORES = saved;
+  } catch(e) {}
+}
+
+function actualizarSelectPodador() {
+  const sel = document.getElementById('podadorSelect');
+  const actual = sel.value;
+  sel.innerHTML = PODADORES.map(p => `<option value="${p}">👤 ${p}</option>`).join('');
+  if (PODADORES.includes(actual)) sel.value = actual;
+}
+
+function actualizarWelcome() {
+  const grid = document.getElementById('welcomeGrid');
+  if (!grid) return;
+  const icons = ['👩','👨','👩','👨','👦','👩','👤','👤','👤','👤'];
+  grid.innerHTML = PODADORES.map((p,i) => `
+    <button class="welcome-btn" onclick="elegirPodador('${p.replace(/'/g,"\\'")}')">
+      <span class="w-icon">${icons[i] || '👤'}</span>${p}
+    </button>`).join('');
+}
 function initWelcome() {
+  cargarPodadores();
+  actualizarSelectPodador();
   const saved = localStorage.getItem('vina_podador');
   if (saved && PODADORES.includes(saved)) {
     document.getElementById('podadorSelect').value = saved;
     document.getElementById('welcomeScreen').style.display = 'none';
     return;
   }
-  const grid = document.getElementById('welcomeGrid');
-  const icons = ['👩','👨','👩','👨','👦','👩'];
-  grid.innerHTML = PODADORES.map((p,i) => `
-    <button class="welcome-btn" onclick="elegirPodador('${p}')">
-      <span class="w-icon">${icons[i]}</span>${p}
-    </button>`).join('');
+  actualizarWelcome();
 }
 
 function elegirPodador(nombre) {
@@ -860,13 +1004,27 @@ function renderInc() {
   el.innerHTML = incidencias.map(inc => `
     <div class="inc-item">
       <div class="inc-top">
-        <span class="inc-num">${ZONAS[inc.zona].label.replace('Zona ','')} L${inc.lineoNum}</span>
-        <span class="inc-type ${inc.tipo}">${lab[inc.tipo]}</span>
+        <span class="inc-num" style="flex:1">${lab[inc.tipo]||inc.tipo} · L${inc.lineoNum} · ${ZONAS[inc.zona].label}</span>
         <button class="inc-del-btn" onclick="eliminarInc(${inc.id})">✕</button>
       </div>
       ${inc.nota?`<div class="inc-nota">"${inc.nota}"</div>`:''}
       <div class="inc-podador">${inc.podador} · ${inc.fecha}</div>
     </div>`).join('');
+}
+
+function descargarIncidencias() {
+  if (!incidencias.length) { showToast('No hay incidencias'); return; }
+  const lab = {alambre:'Alambre roto', extensor:'Cambiar extensor', poste:'Poste roto', tensar:'Tensar alambre', otro:'Otro'};
+  let txt = `=== INCIDENCIAS ACTIVAS ===\nFecha: ${new Date().toLocaleDateString('es-ES')}\nTotal: ${incidencias.length}\n\n`;
+  incidencias.forEach((inc, i) => {
+    txt += `${i+1}. ${lab[inc.tipo]||inc.tipo} · Líneo ${inc.lineoNum} · ${ZONAS[inc.zona].label}\n`;
+    if (inc.nota) txt += `   Nota: ${inc.nota}\n`;
+    txt += `   Registrado por ${inc.podador} · ${inc.fecha}\n\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt], {type:'text/plain'}));
+  a.download = `incidencias_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
 }
 
 function eliminarInc(id) {
